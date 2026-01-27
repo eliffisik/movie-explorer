@@ -55,6 +55,9 @@ export default function SearchScreen() {
   const [trending, setTrending] = useState<SearchItem[]>([]);
   const [favSet, setFavSet] = useState<Set<string>>(new Set());
 
+  // ✅ NEW: filter chips
+  const [filter, setFilter] = useState<"all" | "movie" | "tv">("all");
+
   const canSearch = debounced.length >= 2;
 
   // ✅ Load favorites once
@@ -197,6 +200,30 @@ export default function SearchScreen() {
           ) : null}
         </View>
 
+        {/* ✅ NEW: Filter chips */}
+        <View style={{ flexDirection: "row", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+          {(["all", "movie", "tv"] as const).map((v) => {
+            const active = filter === v;
+            const label = v === "all" ? "All" : v === "movie" ? "Movies" : "TV";
+            return (
+              <Pressable
+                key={v}
+                onPress={() => setFilter(v)}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: active ? "rgba(124,92,252,0.7)" : theme.border,
+                  backgroundColor: active ? "rgba(124,92,252,0.22)" : theme.card,
+                }}
+              >
+                <Text style={{ color: theme.text, fontWeight: "900" }}>{label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
         {query.trim().length === 0 ? (
           <Text style={{ color: theme.muted, marginTop: 10 }}>Trending today</Text>
         ) : null}
@@ -219,9 +246,14 @@ export default function SearchScreen() {
         ) : null}
       </View>
     );
-  }, [query, loading, error, canSearch]);
+  }, [query, loading, error, canSearch, filter]);
 
-  const listData = query.trim().length === 0 ? trending : results;
+  // ✅ base data: trending or search
+  const baseData = query.trim().length === 0 ? trending : results;
+
+  // ✅ filtered by chip
+  const listData =
+    filter === "all" ? baseData : baseData.filter((x) => x.media_type === filter);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -245,11 +277,11 @@ export default function SearchScreen() {
               onPress={() =>
                 router.push({
                   pathname: "/detail",
-                  params: { id: String(item.id), type }, // ✅ doğru param
+                  params: { id: String(item.id), type },
                 })
               }
               style={{
-                position: "relative", // ✅ required for floating star
+                position: "relative",
                 marginHorizontal: 16,
                 padding: 12,
                 borderRadius: 18,
@@ -264,7 +296,7 @@ export default function SearchScreen() {
               {/* ⭐ Floating star */}
               <Pressable
                 onPress={async (e) => {
-                  e.stopPropagation(); // ✅ star -> detail click olmasın
+                  e.stopPropagation();
 
                   const next = await toggleFavorite({
                     id: item.id,
