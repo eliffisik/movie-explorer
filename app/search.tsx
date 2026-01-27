@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { tmdbGet } from "../src/api/tmdbClient";
 import { posterUrl } from "../src/utils/image";
 import { theme } from "../src/ui/theme";
+import { toggleFavorite, getFavorites } from "../src/storage/favorites";
 
 type MediaType = "movie" | "tv" | "person";
 
@@ -49,38 +50,55 @@ export default function SearchScreen() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const [results, setResults] = useState<SearchItem[]>([]);
-const [trending, setTrending] = useState<SearchItem[]>([]);
+  const [trending, setTrending] = useState<SearchItem[]>([]);
+  const [favSet, setFavSet] = useState<Set<string>>(new Set());
 
   const canSearch = debounced.length >= 2;
 
-
+  // ✅ Load favorites once
   useEffect(() => {
-  let cancelled = false;
-
-  async function loadTrending() {
-    try {
-      const data = await tmdbGet<{ results: SearchItem[] }>("/trending/all/day", {
-        language: "en-US",
-      });
-
+    let cancelled = false;
+    (async () => {
+      const favs = await getFavorites();
       if (cancelled) return;
+      setFavSet(new Set(favs.map((f) => `${f.type}-${f.id}`)));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-      const filtered = (data.results || []).filter(
-        (x) => x.media_type === "movie" || x.media_type === "tv"
-      );
+  // ✅ Trending on first load
+  useEffect(() => {
+    let cancelled = false;
 
-      setTrending(filtered);
-    } catch {
-      // trending gelmese de app çalışsın
+    async function loadTrending() {
+      try {
+        const data = await tmdbGet<{ results: SearchItem[] }>("/trending/all/day", {
+          language: "en-US",
+        });
+
+        if (cancelled) return;
+
+        const filtered = (data.results || []).filter(
+          (x) => x.media_type === "movie" || x.media_type === "tv"
+        );
+
+        setTrending(filtered);
+      } catch {
+        // trending gelmese de app çalışsın
+      }
     }
-  }
 
-  loadTrending();
-  return () => {
-    cancelled = true;
-  };
-}, []);
+    loadTrending();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // ✅ Search effect
   useEffect(() => {
     let cancelled = false;
 
@@ -106,6 +124,7 @@ const [trending, setTrending] = useState<SearchItem[]>([]);
         const filtered = (data.results || []).filter(
           (x) => x.media_type === "movie" || x.media_type === "tv"
         );
+
         setResults(filtered);
       } catch (e: any) {
         if (!cancelled) setError(e?.message ?? "Search error");
@@ -121,12 +140,12 @@ const [trending, setTrending] = useState<SearchItem[]>([]);
   }, [debounced, canSearch]);
 
   const header = useMemo(() => {
-    
     return (
       <View style={{ padding: 16, paddingBottom: 10, backgroundColor: theme.bg }}>
         <Text style={{ fontSize: 28, fontWeight: "900", color: theme.text }}>
           Discover
         </Text>
+
         <Text style={{ marginTop: 6, color: theme.muted }}>
           Search movies & TV shows and see where to watch.
         </Text>
@@ -178,6 +197,10 @@ const [trending, setTrending] = useState<SearchItem[]>([]);
           ) : null}
         </View>
 
+        {query.trim().length === 0 ? (
+          <Text style={{ color: theme.muted, marginTop: 10 }}>Trending today</Text>
+        ) : null}
+
         {loading ? (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12 }}>
             <ActivityIndicator />
@@ -197,7 +220,8 @@ const [trending, setTrending] = useState<SearchItem[]>([]);
       </View>
     );
   }, [query, loading, error, canSearch]);
- const listData = query.trim().length === 0 ? trending : results;
+
+  const listData = query.trim().length === 0 ? trending : results;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -212,15 +236,20 @@ const [trending, setTrending] = useState<SearchItem[]>([]);
           const img = posterUrl(item.poster_path);
           const year = (item.release_date || item.first_air_date || "").slice(0, 4);
 
+          const type = item.media_type as "movie" | "tv";
+          const favKey = `${type}-${item.id}`;
+          const isFav = favSet.has(favKey);
+
           return (
             <Pressable
               onPress={() =>
                 router.push({
                   pathname: "/detail",
-                  params: { id: String(item.id), type: item.media_type },
+                  params: { id: String(item.id), type }, // ✅ doğru param
                 })
               }
               style={{
+                position: "relative", // ✅ required for floating star
                 marginHorizontal: 16,
                 padding: 12,
                 borderRadius: 18,
@@ -232,6 +261,43 @@ const [trending, setTrending] = useState<SearchItem[]>([]);
                 alignItems: "center",
               }}
             >
+              {/* ⭐ Floating star */}
+              <Pressable
+                onPress={async (e) => {
+                  e.stopPropagation(); // ✅ star -> detail click olmasın
+
+                  const next = await toggleFavorite({
+                    id: item.id,
+                    type,
+                    title,
+                    poster_path: item.poster_path,
+                    vote_average: item.vote_average,
+                    year,
+                  });
+
+                  setFavSet(new Set(next.map((f) => `${f.type}-${f.id}`)));
+                }}
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  right: 10,
+                  width: 38,
+                  height: 38,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  backgroundColor: "rgba(0,0,0,0.35)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 10,
+                }}
+              >
+                <Text style={{ fontSize: 18, color: isFav ? theme.accent : theme.text }}>
+                  {isFav ? "★" : "☆"}
+                </Text>
+              </Pressable>
+
+              {/* Poster */}
               <View
                 style={{
                   width: 62,
@@ -246,13 +312,17 @@ const [trending, setTrending] = useState<SearchItem[]>([]);
                 ) : null}
               </View>
 
+              {/* Info */}
               <View style={{ flex: 1, gap: 6 }}>
-                <Text style={{ fontSize: 16, fontWeight: "800", color: theme.text }} numberOfLines={2}>
+                <Text
+                  style={{ fontSize: 16, fontWeight: "800", color: theme.text }}
+                  numberOfLines={2}
+                >
                   {title}
                 </Text>
 
                 <Text style={{ color: theme.muted }}>
-                  {item.media_type.toUpperCase()} {year ? `• ${year}` : ""}
+                  {type.toUpperCase()} {year ? `• ${year}` : ""}
                 </Text>
 
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
