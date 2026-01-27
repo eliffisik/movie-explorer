@@ -6,13 +6,14 @@ import {
   ScrollView,
   Text,
   View,
+  Linking,
 } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { tmdbGet } from "../src/api/tmdbClient";
 import { posterUrl } from "../src/utils/image";
 import { getRegion, setRegion } from "../src/storage/settings";
 import { theme } from "../src/ui/theme";
-import { Linking } from "react-native";
+
 
 type Params = { id?: string; type?: "movie" | "tv" };
 
@@ -307,9 +308,12 @@ export default function DetailScreen() {
                   </Text>
                 ) : null}
 
-                {providerLink ? (
+ {providerLink ? (
   <Pressable
-    onPress={() => Linking.openURL(providerLink)}
+    onPress={async () => {
+      const can = await Linking.canOpenURL(providerLink);
+      if (can) await Linking.openURL(providerLink);
+    }}
     style={{
       marginTop: 12,
       paddingVertical: 12,
@@ -321,11 +325,10 @@ export default function DetailScreen() {
       alignSelf: "flex-start",
     }}
   >
-    <Text style={{ color: theme.text, fontWeight: "900" }}>
-      Open on TMDB
-    </Text>
+    <Text style={{ color: theme.text, fontWeight: "900" }}>Open on TMDB</Text>
   </Pressable>
 ) : null}
+
 
               </View>
             </View>
