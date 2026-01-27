@@ -330,19 +330,32 @@ export default function SearchScreen() {
               </Pressable>
 
               {/* Poster */}
-              <View
-                style={{
-                  width: 62,
-                  height: 92,
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  backgroundColor: "rgba(255,255,255,0.06)",
-                }}
-              >
-                {img ? (
-                  <Image source={{ uri: img }} style={{ width: "100%", height: "100%" }} />
-                ) : null}
-              </View>
+             <View
+  style={{
+    width: 62,
+    height: 92,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  {img ? (
+    <Image source={{ uri: img }} style={{ width: "100%", height: "100%" }} />
+  ) : (
+    <View style={{ alignItems: "center", justifyContent: "center", paddingHorizontal: 6 }}>
+      <Text style={{ color: theme.muted, fontWeight: "900", fontSize: 12 }}>🎬</Text>
+      <Text
+        style={{ color: theme.muted, fontWeight: "800", fontSize: 10, marginTop: 2 }}
+        numberOfLines={2}
+      >
+        No Image
+      </Text>
+    </View>
+  )}
+</View>
+
 
               {/* Info */}
               <View style={{ flex: 1, gap: 6 }}>
