@@ -12,6 +12,7 @@ import { tmdbGet } from "../src/api/tmdbClient";
 import { posterUrl } from "../src/utils/image";
 import { getRegion, setRegion } from "../src/storage/settings";
 import { theme } from "../src/ui/theme";
+import { Linking } from "react-native";
 
 type Params = { id?: string; type?: "movie" | "tv" };
 
@@ -307,10 +308,25 @@ export default function DetailScreen() {
                 ) : null}
 
                 {providerLink ? (
-                  <Text style={{ marginTop: 10, color: theme.muted }}>
-                    TMDB link available (we can add an “Open” button next).
-                  </Text>
-                ) : null}
+  <Pressable
+    onPress={() => Linking.openURL(providerLink)}
+    style={{
+      marginTop: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: "rgba(124,92,252,0.7)",
+      backgroundColor: "rgba(124,92,252,0.22)",
+      alignSelf: "flex-start",
+    }}
+  >
+    <Text style={{ color: theme.text, fontWeight: "900" }}>
+      Open on TMDB
+    </Text>
+  </Pressable>
+) : null}
+
               </View>
             </View>
           </ScrollView>

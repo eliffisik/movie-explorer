@@ -50,9 +50,37 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<SearchItem[]>([]);
+const [trending, setTrending] = useState<SearchItem[]>([]);
 
   const canSearch = debounced.length >= 2;
 
+
+  useEffect(() => {
+  let cancelled = false;
+
+  async function loadTrending() {
+    try {
+      const data = await tmdbGet<{ results: SearchItem[] }>("/trending/all/day", {
+        language: "en-US",
+      });
+
+      if (cancelled) return;
+
+      const filtered = (data.results || []).filter(
+        (x) => x.media_type === "movie" || x.media_type === "tv"
+      );
+
+      setTrending(filtered);
+    } catch {
+      // trending gelmese de app çalışsın
+    }
+  }
+
+  loadTrending();
+  return () => {
+    cancelled = true;
+  };
+}, []);
   useEffect(() => {
     let cancelled = false;
 
@@ -93,6 +121,7 @@ export default function SearchScreen() {
   }, [debounced, canSearch]);
 
   const header = useMemo(() => {
+    
     return (
       <View style={{ padding: 16, paddingBottom: 10, backgroundColor: theme.bg }}>
         <Text style={{ fontSize: 28, fontWeight: "900", color: theme.text }}>
@@ -168,11 +197,12 @@ export default function SearchScreen() {
       </View>
     );
   }, [query, loading, error, canSearch]);
+ const listData = query.trim().length === 0 ? trending : results;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
       <FlatList
-        data={results}
+        data={listData}
         keyExtractor={(x) => `${x.media_type}-${x.id}`}
         ListHeaderComponent={header}
         contentContainerStyle={{ paddingBottom: 24 }}
