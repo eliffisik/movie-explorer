@@ -37,13 +37,14 @@ export default function FavoritesScreen() {
               Favorites
             </Text>
             <Text style={{ color: theme.muted, marginTop: 6 }}>
-              Your saved movies & TV shows.
+              Your saved movies & TV shows
             </Text>
           </View>
         }
         ListEmptyComponent={
           <Text style={{ color: theme.muted, marginTop: 20 }}>
-            No favorites yet. Star something from Search ✨
+            No favorites yet ⭐  
+            Add some from Search.
           </Text>
         }
         renderItem={({ item }) => {
@@ -58,6 +59,7 @@ export default function FavoritesScreen() {
                 })
               }
               style={{
+                position: "relative",
                 padding: 12,
                 borderRadius: 18,
                 borderWidth: 1,
@@ -68,6 +70,7 @@ export default function FavoritesScreen() {
                 alignItems: "center",
               }}
             >
+              {/* Poster */}
               <View
                 style={{
                   width: 62,
@@ -82,31 +85,43 @@ export default function FavoritesScreen() {
                 ) : null}
               </View>
 
+              {/* Info */}
               <View style={{ flex: 1, gap: 6 }}>
-                <Text style={{ fontSize: 16, fontWeight: "900", color: theme.text }} numberOfLines={2}>
+                <Text
+                  style={{ fontSize: 16, fontWeight: "900", color: theme.text }}
+                  numberOfLines={2}
+                >
                   {item.title}
                 </Text>
+
                 <Text style={{ color: theme.muted }}>
                   {item.type.toUpperCase()} {item.year ? `• ${item.year}` : ""}
                 </Text>
-                <Text style={{ color: theme.muted }}>⭐ {(item.vote_average ?? 0).toFixed(1)}</Text>
+
+                <Text style={{ color: theme.muted }}>
+                  ⭐ {(item.vote_average ?? 0).toFixed(1)}
+                </Text>
               </View>
 
+              {/* Remove star */}
               <Pressable
-                onPress={async () => {
+                onPress={async (e) => {
+                  e.stopPropagation();
                   const next = await toggleFavorite(item);
                   setItems(next);
                 }}
                 style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 10,
-                  borderRadius: 14,
+                  width: 38,
+                  height: 38,
+                  borderRadius: 12,
                   borderWidth: 1,
                   borderColor: theme.border,
-                  backgroundColor: "rgba(255,255,255,0.06)",
+                  backgroundColor: "rgba(0,0,0,0.35)",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                <Text style={{ color: theme.text, fontWeight: "900" }}>Remove</Text>
+                <Text style={{ fontSize: 18, color: theme.accent }}>★</Text>
               </Pressable>
             </Pressable>
           );
