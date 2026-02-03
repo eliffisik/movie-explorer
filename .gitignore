@@ -45,3 +45,9 @@ app-example
 # generated native folders
 /ios
 /android
+
+# server (AI backend)
+server/node_modules/
+server/.env
+server/.env.*
+
