@@ -1,50 +1,58 @@
-# Welcome to your Expo app 👋
+# 🎬 Movie Explorer
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A modern React Native (Expo) application to discover movies & TV shows, see where to watch them, and save favorites — powered by TMDB.
 
-## Get started
+Search, explore trending titles, check streaming providers by region, and build your personal watchlist.
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+- Search Movies & TV Shows
 
-2. Start the app
+Debounced search (fast & smooth UX)
 
-   ```bash
-   npx expo start
-   ```
+Movie / TV filter chips
 
-In the output, you'll find options to open the app in a
+- Trending Today
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Shows trending movies & TV when search is empty
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- Detailed View
 
-## Get a fresh project
+Overview, rating, release year
 
-When you're ready, run:
+Streaming providers by region (Subscription / Rent / Buy)
 
-```bash
-npm run reset-project
-```
+Direct Open on TMDB link
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- Favorites
 
-## Learn more
+Save & remove favorites
 
-To learn more about developing your project with Expo, look at the following resources:
+Persistent storage
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- Region Selection
 
-## Join the community
+See availability by country (US, TR, DE, GB)
 
-Join our community of developers creating universal apps.
+- Polished UI
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Modern card layout
+
+Haptic tab navigation
+
+Dark-friendly theme
+
+
+
+## Tech Stack
+
+- React Native (Expo)
+
+- Expo Router
+
+- TypeScript
+
+- TMDB API
+
+- Local storage for favorites & settings
+
