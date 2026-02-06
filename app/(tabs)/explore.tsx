@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View, Image } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View, Image ,Modal} from "react-native";
 import { useRouter } from "expo-router";
 import { theme } from "../../src/ui/theme";
 import { posterUrl } from "../../src/utils/image";
@@ -42,9 +42,11 @@ export default function ExploreAI() {
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<Rec[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showGenres, setShowGenres] = useState(false);
 
   const canRun = useMemo(() => genre.length > 0, [genre]);
-
+  const selectedGenreLabel =
+  GENRES.find((g) => g.value === genre)?.label ?? "Select genre";
   async function recommend() {
     try {
       if (!canRun) return;
@@ -102,32 +104,89 @@ export default function ExploreAI() {
         })}
       </View>
 
-      {/* Genre chips */}
-      <Text style={{ color: theme.text, fontWeight: "900", marginTop: 16 }}>
-        Hangi tür?
-      </Text>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-        {GENRES.map((g) => {
-          const active = g.value === genre;
-          return (
-            <Pressable
-              key={g.value}
-              onPress={() => setGenre(g.value)}
-              style={{
-                paddingHorizontal: 12,
-                paddingVertical: 8,
-                borderRadius: 999,
-                borderWidth: 1,
-                borderColor: active ? "rgba(124,92,252,0.8)" : theme.border,
-                backgroundColor: active ? "rgba(124,92,252,0.22)" : theme.card,
-              }}
-            >
-              <Text style={{ color: theme.text, fontWeight: "900" }}>{g.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      {/* Genre (Dropdown) */}
+<Text style={{ color: theme.text, fontWeight: "900", marginTop: 16 }}>
+  Hangi tür?
+</Text>
 
+<Pressable
+  onPress={() => setShowGenres(true)}
+  style={{
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: theme.card,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  }}
+>
+  <Text style={{ color: theme.text, fontWeight: "900", fontSize: 16 }}>
+    {selectedGenreLabel}
+  </Text>
+  <Text style={{ color: theme.muted, fontSize: 16 }}>▾</Text>
+</Pressable>
+
+<Modal visible={showGenres} transparent animationType="fade">
+  {/* dışarı tıklayınca kapanması için overlay */}
+  <Pressable
+    onPress={() => setShowGenres(false)}
+    style={{
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.55)",
+      justifyContent: "center",
+      padding: 20,
+    }}
+  >
+    {/* içerik kartı */}
+    <Pressable
+      onPress={() => {}}
+      style={{
+        backgroundColor: theme.card,
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor: theme.border,
+        padding: 14,
+        gap: 8,
+      }}
+    >
+      <Text style={{ color: theme.text, fontWeight: "900", fontSize: 16 }}>
+        Tür seç
+      </Text>
+
+      {GENRES.map((g) => {
+        const active = g.value === genre;
+
+        return (
+          <Pressable
+            key={g.value}
+            onPress={() => {
+              setGenre(g.value);
+              setShowGenres(false);
+            }}
+            style={{
+              paddingVertical: 12,
+              paddingHorizontal: 12,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: active ? "rgba(124,92,252,0.8)" : "transparent",
+              backgroundColor: active
+                ? "rgba(124,92,252,0.18)"
+                : "rgba(255,255,255,0.04)",
+            }}
+          >
+            <Text style={{ color: theme.text, fontWeight: "800", fontSize: 15 }}>
+              {g.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </Pressable>
+  </Pressable>
+</Modal>
       {/* Mood */}
       <Text style={{ color: theme.text, fontWeight: "900", marginTop: 14 }}>
         Mood (opsiyonel)
