@@ -5,7 +5,7 @@ import { theme } from "../../src/ui/theme";
 import { posterUrl } from "../../src/utils/image";
 import { SafeAreaView } from 'react-native-safe-area-context';
 // ✅ 1) TELEFON (Expo Go) => PC IP
-const API_BASE = "http://192.168.1.202:5050";
+const API_BASE = "https://movie-explorer-production-735c.up.railway.app";
 // ✅ 2) ANDROID EMULATOR => "http://10.0.2.2:5050"
 // ✅ 3) IOS SIM => "http://localhost:5050"
 
