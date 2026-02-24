@@ -76,7 +76,6 @@ async function discoverByGenre({ type, genre, page = 1 }) {
 async function askAI({ candidates, genre, mood, type }) {
   if (!GROQ) throw new Error("Missing GROQ_API_KEY");
 
-  // token-friendly
   const compact = candidates.map((c) => ({
     id: c.id,
     title: c.title,
@@ -93,14 +92,26 @@ async function askAI({ candidates, genre, mood, type }) {
       Authorization: `Bearer ${GROQ}`,
     },
     body: JSON.stringify({
-      model: "llama-3.1-8b-instant",
-      temperature: 0.2,
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.7,
       response_format: { type: "json_object" },
       messages: [
         {
           role: "system",
-          content:
-            'You are a movie/TV curator. Pick EXACTLY 5 items ONLY from candidates. Do NOT invent titles. Reasons must describe vibe/themes (not keyword matching). Return ONLY JSON: {"recommendations":[{"id":number,"reason":string}]}.',
+          content: `You are a passionate film critic with 20+ years of experience — think a mix of Roger Ebert's warmth and a film school professor's depth. Your job is to pick EXACTLY 5 items from the provided candidates list and explain WHY each one matches the user's mood.
+
+RULES:
+- Pick ONLY from the candidates list. NEVER invent or suggest titles not in the list.
+- Each "reason" must be 2-3 sentences. Describe the emotional experience of watching it — the atmosphere, pacing, themes. NOT plot summary.
+- Match the mood closely. If the user says "cozy", pick comfort films. If "dark", lean into tension and moral complexity.
+- Vary your picks: don't pick 5 similar films. Give range.
+- Return ONLY valid JSON, no extra text: {"recommendations":[{"id":number,"reason":string}]}
+
+GOOD reason example:
+"A slow-burn thriller that wraps you in paranoia from the first frame. The kind of film you watch with the lights off — unsettling, elegant, and impossible to shake."
+
+BAD reason example:
+"This movie matches your thriller and dark preferences."`,
         },
         {
           role: "user",
@@ -134,7 +145,6 @@ app.post("/recommend", async (req, res) => {
     if (!GROQ) throw new Error("Missing GROQ_API_KEY");
     if (!GENRE_MAP[String(genre).toLowerCase()]) throw new Error("Invalid genre");
 
-    // Candidates = genre discover (2 sayfa karıştır -> çeşitlilik)
     const [c1, c2] = await Promise.all([
       discoverByGenre({ type, genre, page: 1 }),
       discoverByGenre({ type, genre, page: 2 }),
