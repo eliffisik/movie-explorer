@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View, Image 
 import { useRouter } from "expo-router";
 import { theme } from "../../src/ui/theme";
 import { posterUrl } from "../../src/utils/image";
-
+import { SafeAreaView } from 'react-native-safe-area-context';
 // ✅ 1) TELEFON (Expo Go) => PC IP
 const API_BASE = "http://192.168.1.100:5050";
 // ✅ 2) ANDROID EMULATOR => "http://10.0.2.2:5050"
@@ -73,6 +73,7 @@ export default function ExploreAI() {
   }
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
     <ScrollView style={{ flex: 1, backgroundColor: theme.bg }} contentContainerStyle={{ padding: 16, paddingBottom: 28 }}>
       <Text style={{ fontSize: 28, fontWeight: "900", color: theme.text }}>
         Ne izlemek istersin?
@@ -287,5 +288,6 @@ export default function ExploreAI() {
         ) : null}
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }

@@ -14,6 +14,7 @@ import { tmdbGet } from "../src/api/tmdbClient";
 import { posterUrl } from "../src/utils/image";
 import { theme } from "../src/ui/theme";
 import { toggleFavorite, getFavorites } from "../src/storage/favorites";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type MediaType = "movie" | "tv" | "person";
 
@@ -144,7 +145,7 @@ export default function SearchScreen() {
 
   const header = useMemo(() => {
     return (
-      <View style={{ padding: 16, paddingBottom: 10, backgroundColor: theme.bg }}>
+      <SafeAreaView style={{ padding: 16, paddingBottom: 10, backgroundColor: theme.bg }}>
         <Text style={{ fontSize: 28, fontWeight: "900", color: theme.text }}>
           Discover
         </Text>
@@ -244,7 +245,7 @@ export default function SearchScreen() {
             Type at least 2 characters.
           </Text>
         ) : null}
-      </View>
+      </SafeAreaView>
     );
   }, [query, loading, error, canSearch, filter]);
 

@@ -4,6 +4,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { getFavorites, toggleFavorite, FavItem } from "../../src/storage/favorites";
 import { posterUrl } from "../../src/utils/image";
 import { theme } from "../../src/ui/theme";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function FavoritesScreen() {
   const router = useRouter();
@@ -25,7 +26,8 @@ export default function FavoritesScreen() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.bg }}>
+    
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
       <FlatList
         data={items}
         keyExtractor={(x) => `${x.type}-${x.id}`}
@@ -127,6 +129,6 @@ export default function FavoritesScreen() {
           );
         }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
