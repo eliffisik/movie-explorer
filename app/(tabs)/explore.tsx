@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View, Image, Modal } from "react-native";
+import { useState } from "react";
+import { Pressable, ScrollView, Text, View, Image, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import { theme } from "../../src/ui/theme";
 import { posterUrl } from "../../src/utils/image";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 const API_BASE = "https://movie-explorer-production-735c.up.railway.app";
 
@@ -89,6 +90,7 @@ export default function ExploreAI() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 28 }}>
+
         <Text style={{ fontSize: 28, fontWeight: "900", color: theme.text }}>
           What do you want to watch?
         </Text>
@@ -158,7 +160,7 @@ export default function ExploreAI() {
                 gap: 8,
               }}
             >
-              <Text style={{ color: theme.text, fontWeight: "900", fontSize: 16 }}>Select a genre</Text>
+              <Text style={{ color: theme.text, fontWeight: "900", fontSize: 16 }}>Select genre</Text>
               {GENRES.map((g) => {
                 const active = g.value === genre;
                 return (
@@ -184,7 +186,7 @@ export default function ExploreAI() {
 
         {/* Mood Chips */}
         <Text style={{ color: theme.text, fontWeight: "900", marginTop: 16 }}>
-          Mood {selectedMoods.length > 0 ? `(${selectedMoods.length} selected)` : "(optional)"}
+          {selectedMoods.length > 0 ? `Mood (${selectedMoods.length} selected)` : "Mood (optional)"}
         </Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
           {MOODS.map((m) => {
@@ -226,20 +228,12 @@ export default function ExploreAI() {
           <Text style={{ color: theme.text, fontWeight: "900" }}>Get Recommendations</Text>
         </Pressable>
 
-        {loading ? <View style={{ marginTop: 14 }}><ActivityIndicator /></View> : null}
-        {error ? <Text style={{ marginTop: 12, color: theme.danger }}>{error}</Text> : null}
-
-        {/* Results */}
-        <View style={{ marginTop: 16, gap: 10 }}>
-          {items.map((x) => {
-            const img = x.poster_path ? posterUrl(x.poster_path) : null;
-            return (
-              <Pressable
-                key={x.id}
-                onPress={() => {
-                  if (!x.type) return;
-                  router.push({ pathname: "/detail", params: { id: String(x.id), type: x.type } });
-                }}
+        {/* Skeleton Loading */}
+        {loading ? (
+          <View style={{ marginTop: 14, gap: 10 }}>
+            {[...Array(5)].map((_, i) => (
+              <View
+                key={i}
                 style={{
                   padding: 12,
                   borderRadius: 18,
@@ -249,23 +243,91 @@ export default function ExploreAI() {
                   flexDirection: "row",
                   gap: 12,
                   alignItems: "center",
+                  opacity: 1 - i * 0.15,
                 }}
               >
-                <View style={{ width: 62, height: 92, borderRadius: 12, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)" }}>
-                  {img ? <Image source={{ uri: img }} style={{ width: "100%", height: "100%" }} /> : null}
+                <View style={{ width: 62, height: 92, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.06)" }} />
+                <View style={{ flex: 1, gap: 8 }}>
+                  <View style={{ height: 16, borderRadius: 8, backgroundColor: "rgba(255,255,255,0.06)", width: "70%" }} />
+                  <View style={{ height: 12, borderRadius: 8, backgroundColor: "rgba(255,255,255,0.06)", width: "40%" }} />
+                  <View style={{ height: 12, borderRadius: 8, backgroundColor: "rgba(255,255,255,0.06)", width: "90%" }} />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: theme.text, fontWeight: "900", fontSize: 16 }} numberOfLines={2}>
-                    {x.title} {x.year ? `(${x.year})` : ""}
-                  </Text>
-                  <Text style={{ color: theme.muted, marginTop: 4 }}>
-                    {x.type?.toUpperCase()} {typeof x.rating === "number" ? `• ⭐ ${x.rating.toFixed(1)}` : ""}
-                  </Text>
-                  {x.reason ? (
-                    <Text style={{ color: theme.muted, marginTop: 8 }} numberOfLines={3}>{x.reason}</Text>
-                  ) : null}
-                </View>
-              </Pressable>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        {error ? (
+          <View style={{
+            marginTop: 14,
+            padding: 16,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: "rgba(248,113,113,0.3)",
+            backgroundColor: "rgba(248,113,113,0.08)",
+            alignItems: "center",
+            gap: 8,
+          }}>
+            <Text style={{ fontSize: 24 }}>⚠️</Text>
+            <Text style={{ color: "#f87171", fontWeight: "700", textAlign: "center" }}>{error}</Text>
+            <Pressable
+              onPress={recommend}
+              style={{
+                marginTop: 4,
+                paddingHorizontal: 20,
+                paddingVertical: 8,
+                borderRadius: 999,
+                borderWidth: 1,
+                borderColor: "rgba(248,113,113,0.4)",
+                backgroundColor: "rgba(248,113,113,0.12)",
+              }}
+            >
+              <Text style={{ color: "#f87171", fontWeight: "700" }}>Try Again</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {/* Results */}
+        <View style={{ marginTop: 16, gap: 10 }}>
+          {items.map((x, index) => {
+            const img = x.poster_path ? posterUrl(x.poster_path) : null;
+            return (
+              <Animated.View
+                key={x.id}
+                entering={FadeInDown.delay(index * 80).duration(400).springify()}
+              >
+                <Pressable
+                  onPress={() => {
+                    if (!x.type) return;
+                    router.push({ pathname: "/detail", params: { id: String(x.id), type: x.type } });
+                  }}
+                  style={{
+                    padding: 12,
+                    borderRadius: 18,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    backgroundColor: theme.card,
+                    flexDirection: "row",
+                    gap: 12,
+                    alignItems: "center",
+                  }}
+                >
+                  <View style={{ width: 62, height: 92, borderRadius: 12, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)" }}>
+                    {img ? <Image source={{ uri: img }} style={{ width: "100%", height: "100%" }} /> : null}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: theme.text, fontWeight: "900", fontSize: 16 }} numberOfLines={2}>
+                      {x.title} {x.year ? `(${x.year})` : ""}
+                    </Text>
+                    <Text style={{ color: theme.muted, marginTop: 4 }}>
+                      {x.type?.toUpperCase()} {typeof x.rating === "number" ? `• ⭐ ${x.rating.toFixed(1)}` : ""}
+                    </Text>
+                    {x.reason ? (
+                      <Text style={{ color: theme.muted, marginTop: 8 }} numberOfLines={3}>{x.reason}</Text>
+                    ) : null}
+                  </View>
+                </Pressable>
+              </Animated.View>
             );
           })}
 
@@ -275,6 +337,7 @@ export default function ExploreAI() {
             </Text>
           ) : null}
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );
