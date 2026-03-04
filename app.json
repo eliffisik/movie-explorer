@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "movie-explorer",
-    "slug": "movie-explorer",
+    "name": "Cinefy",
+    "slug": "cinefy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "movieexplorer",
+    "scheme": "cinefy",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
