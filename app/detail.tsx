@@ -13,7 +13,7 @@ import { tmdbGet } from "../src/api/tmdbClient";
 import { posterUrl } from "../src/utils/image";
 import { getRegion, setRegion } from "../src/storage/settings";
 import { theme } from "../src/ui/theme";
-
+import { t } from "../src/i18n";
 
 type Params = { id?: string; type?: "movie" | "tv" };
 
@@ -50,19 +50,16 @@ type WatchProvidersResponse = {
 function providerLogo(path: string | null) {
   return path ? `https://image.tmdb.org/t/p/w92${path}` : null;
 }
+
 function backdropUrl(path: string | null | undefined) {
   return path ? `https://image.tmdb.org/t/p/w780${path}` : null;
 }
 
 function ProviderRow({ title, items }: { title: string; items: Provider[] }) {
   if (!items?.length) return null;
-
   return (
     <View style={{ marginTop: 16 }}>
-      <Text style={{ color: theme.text, fontSize: 16, fontWeight: "900" }}>
-        {title}
-      </Text>
-
+      <Text style={{ color: theme.text, fontSize: 16, fontWeight: "900" }}>{title}</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
         {items.map((p) => {
           const logo = providerLogo(p.logo_path);
@@ -70,31 +67,16 @@ function ProviderRow({ title, items }: { title: string; items: Provider[] }) {
             <View
               key={p.provider_id}
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-                paddingVertical: 10,
-                paddingHorizontal: 12,
-                borderRadius: 16,
-                borderWidth: 1,
-                borderColor: theme.border,
-                backgroundColor: theme.card,
+                flexDirection: "row", alignItems: "center", gap: 10,
+                paddingVertical: 10, paddingHorizontal: 12,
+                borderRadius: 16, borderWidth: 1,
+                borderColor: theme.border, backgroundColor: theme.card,
               }}
             >
-              <View
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 8,
-                  overflow: "hidden",
-                  backgroundColor: "rgba(255,255,255,0.06)",
-                }}
-              >
+              <View style={{ width: 26, height: 26, borderRadius: 8, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)" }}>
                 {logo ? <Image source={{ uri: logo }} style={{ width: "100%", height: "100%" }} /> : null}
               </View>
-              <Text style={{ color: theme.text, fontWeight: "800" }}>
-                {p.provider_name}
-              </Text>
+              <Text style={{ color: theme.text, fontWeight: "800" }}>{p.provider_name}</Text>
             </View>
           );
         })}
@@ -105,17 +87,13 @@ function ProviderRow({ title, items }: { title: string; items: Provider[] }) {
 
 export default function DetailScreen() {
   const { id, type } = useLocalSearchParams<Params>();
-
   const [region, setRegionState] = useState("US");
-
   const [loading, setLoading] = useState(true);
   const [item, setItem] = useState<Detail | null>(null);
-
   const [flatrateProviders, setFlatrateProviders] = useState<Provider[]>([]);
   const [rentProviders, setRentProviders] = useState<Provider[]>([]);
   const [buyProviders, setBuyProviders] = useState<Provider[]>([]);
   const [providerLink, setProviderLink] = useState<string | undefined>(undefined);
-
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -124,26 +102,19 @@ export default function DetailScreen() {
 
   useEffect(() => {
     let cancelled = false;
-
     async function load() {
       try {
         setLoading(true);
         setError(null);
-
         if (!id || !type) throw new Error("Missing params");
-
         const [detail, wp] = await Promise.all([
           tmdbGet<Detail>(`/${type}/${id}`, { language: "en-US" }),
           tmdbGet<WatchProvidersResponse>(`/${type}/${id}/watch/providers`),
         ]);
-
         if (cancelled) return;
-
         setItem(detail);
-
         const byRegion = wp.results?.[region];
         setProviderLink(byRegion?.link);
-
         setFlatrateProviders(byRegion?.flatrate ?? []);
         setRentProviders(byRegion?.rent ?? []);
         setBuyProviders(byRegion?.buy ?? []);
@@ -153,11 +124,8 @@ export default function DetailScreen() {
         if (!cancelled) setLoading(false);
       }
     }
-
     load();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [id, type, region]);
 
   const title = item?.title ?? item?.name ?? "Detail";
@@ -169,15 +137,9 @@ export default function DetailScreen() {
         {options.map((r) => (
           <Pressable
             key={r}
-            onPress={async () => {
-              setRegionState(r);
-              await setRegion(r);
-            }}
+            onPress={async () => { setRegionState(r); await setRegion(r); }}
             style={{
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              borderRadius: 999,
-              borderWidth: 1,
+              paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1,
               borderColor: r === region ? "rgba(124,92,252,0.7)" : theme.border,
               backgroundColor: r === region ? "rgba(124,92,252,0.22)" : theme.card,
             }}
@@ -199,7 +161,6 @@ export default function DetailScreen() {
   return (
     <>
       <Stack.Screen options={{ title: "Detail" }} />
-
       <View style={{ flex: 1, backgroundColor: theme.bg }}>
         {loading ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -221,59 +182,19 @@ export default function DetailScreen() {
               {hero ? (
                 <Image source={{ uri: hero }} style={{ width: "100%", height: "100%", opacity: 0.85 }} />
               ) : null}
-              <View
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: 120,
-                  backgroundColor: "rgba(11,15,25,0.82)",
-                }}
-              />
+              <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 120, backgroundColor: "rgba(11,15,25,0.82)" }} />
             </View>
 
             {/* Body */}
             <View style={{ padding: 16, marginTop: -40 }}>
-              <View
-                style={{
-                  borderRadius: 18,
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                  backgroundColor: theme.card,
-                  padding: 14,
-                }}
-              >
-                <Text style={{ fontSize: 22, fontWeight: "900", color: theme.text }}>
-                  {title}
-                </Text>
+              <View style={{ borderRadius: 18, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card, padding: 14 }}>
+                <Text style={{ fontSize: 22, fontWeight: "900", color: theme.text }}>{title}</Text>
 
                 <View style={{ flexDirection: "row", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-                  <View
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                      borderRadius: 999,
-                      backgroundColor: "rgba(124,92,252,0.18)",
-                      borderWidth: 1,
-                      borderColor: "rgba(124,92,252,0.35)",
-                    }}
-                  >
-                    <Text style={{ color: theme.text, fontWeight: "900" }}>
-                      ⭐ {item.vote_average?.toFixed(1)}
-                    </Text>
+                  <View style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: "rgba(124,92,252,0.18)", borderWidth: 1, borderColor: "rgba(124,92,252,0.35)" }}>
+                    <Text style={{ color: theme.text, fontWeight: "900" }}>⭐ {item.vote_average?.toFixed(1)}</Text>
                   </View>
-
-                  <View
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                      borderRadius: 999,
-                      backgroundColor: "rgba(255,255,255,0.06)",
-                      borderWidth: 1,
-                      borderColor: theme.border,
-                    }}
-                  >
+                  <View style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: theme.border }}>
                     <Text style={{ color: theme.text, fontWeight: "800" }}>
                       {(item.release_date ?? item.first_air_date ?? "").slice(0, 4)}
                     </Text>
@@ -285,51 +206,44 @@ export default function DetailScreen() {
                 </Text>
 
                 <Text style={{ marginTop: 14, color: theme.text, fontWeight: "900" }}>
-                  Region
+                  {t.detailRegion}
                 </Text>
                 {regionPicker}
               </View>
 
               <View style={{ marginTop: 16 }}>
                 <Text style={{ fontSize: 20, fontWeight: "900", color: theme.text }}>
-                  Where to watch
+                  {t.detailWhere}
                 </Text>
                 <Text style={{ color: theme.muted, marginTop: 4 }}>
-                  Showing providers for {region}
+                  {t.detailShowingFor(region)}
                 </Text>
 
-                <ProviderRow title="Subscription" items={flatrateProviders} />
-                <ProviderRow title="Rent" items={rentProviders} />
-                <ProviderRow title="Buy" items={buyProviders} />
+                <ProviderRow title={t.detailSubscription} items={flatrateProviders} />
+                <ProviderRow title={t.detailRent} items={rentProviders} />
+                <ProviderRow title={t.detailBuy} items={buyProviders} />
 
                 {noProviders ? (
-                  <Text style={{ marginTop: 10, color: theme.muted }}>
-                    No providers found for this region.
-                  </Text>
+                  <Text style={{ marginTop: 10, color: theme.muted }}>{t.detailNoProviders}</Text>
                 ) : null}
 
- {providerLink ? (
-  <Pressable
-    onPress={async () => {
-      const can = await Linking.canOpenURL(providerLink);
-      if (can) await Linking.openURL(providerLink);
-    }}
-    style={{
-      marginTop: 12,
-      paddingVertical: 12,
-      paddingHorizontal: 14,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: "rgba(124,92,252,0.7)",
-      backgroundColor: "rgba(124,92,252,0.22)",
-      alignSelf: "flex-start",
-    }}
-  >
-    <Text style={{ color: theme.text, fontWeight: "900" }}>Open on TMDB</Text>
-  </Pressable>
-) : null}
-
-
+                {providerLink ? (
+                  <Pressable
+                    onPress={async () => {
+                      const can = await Linking.canOpenURL(providerLink);
+                      if (can) await Linking.openURL(providerLink);
+                    }}
+                    style={{
+                      marginTop: 12, paddingVertical: 12, paddingHorizontal: 14,
+                      borderRadius: 16, borderWidth: 1,
+                      borderColor: "rgba(124,92,252,0.7)",
+                      backgroundColor: "rgba(124,92,252,0.22)",
+                      alignSelf: "flex-start",
+                    }}
+                  >
+                    <Text style={{ color: theme.text, fontWeight: "900" }}>{t.detailOpenTmdb}</Text>
+                  </Pressable>
+                ) : null}
               </View>
             </View>
           </ScrollView>
