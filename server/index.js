@@ -23,11 +23,18 @@ const GENRE_MAP = {
   "sci-fi": 878,
 };
 
+// Horror ve thriller için daha düşük rating eşiği
+const GENRE_MIN_RATING = {
+  horror: "5.5",
+  thriller: "5.8",
+  crime: "5.8",
+};
+
 function normalizeItem(x, type) {
   return {
     id: x.id,
     type,
-    title: x.title || x.name || "Untitled",
+    title: x.title || x.name || "",
     overview: x.overview || "",
     rating: x.vote_average ?? 0,
     year: (x.release_date || x.first_air_date || "").slice(0, 4),
@@ -62,15 +69,21 @@ async function discoverByGenre({ type, genre, page = 1 }) {
   const gid = GENRE_MAP[String(genre).toLowerCase()];
   if (!gid) return [];
 
+  const minRating = GENRE_MIN_RATING[genre] ?? "6.0";
+
   const data = await tmdbGet(`/discover/${type}`, {
     with_genres: gid,
     sort_by: "popularity.desc",
-    "vote_average.gte": "6.2",
+    "vote_average.gte": minRating,
+    "vote_count.gte": "100", // az oy almış filmleri çıkar
     include_adult: "false",
     page: String(page),
   });
 
-  return (data.results || []).slice(0, 18).map((x) => normalizeItem(x, type));
+  return (data.results || [])
+    .slice(0, 18)
+    .map((x) => normalizeItem(x, type))
+    .filter((x) => x.title.length > 0); // başlıksız öğeleri at
 }
 
 async function askAI({ candidates, genre, mood, type }) {
@@ -102,6 +115,7 @@ async function askAI({ candidates, genre, mood, type }) {
 
 RULES:
 - Pick ONLY from the candidates list. NEVER invent or suggest titles not in the list.
+- You MUST use the exact numeric ID from the candidates list. Do not change or guess IDs.
 - Each "reason" must be 2-3 sentences. Describe the emotional experience of watching it — the atmosphere, pacing, themes. NOT plot summary.
 - Match the mood closely. If the user says "cozy", pick comfort films. If "dark", lean into tension and moral complexity.
 - Vary your picks: don't pick 5 similar films. Give range.
@@ -145,32 +159,44 @@ app.post("/recommend", async (req, res) => {
     if (!GROQ) throw new Error("Missing GROQ_API_KEY");
     if (!GENRE_MAP[String(genre).toLowerCase()]) throw new Error("Invalid genre");
 
-    const [c1, c2] = await Promise.all([
+    const [c1, c2, c3] = await Promise.all([
       discoverByGenre({ type, genre, page: 1 }),
       discoverByGenre({ type, genre, page: 2 }),
+      discoverByGenre({ type, genre, page: 3 }), // 3. sayfa eklendi — çeşitlilik artar
     ]);
 
-    const uniq = new Map();
-    [...c1, ...c2].forEach((c) => uniq.set(`${c.type}-${c.id}`, c));
-    const candidates = Array.from(uniq.values()).slice(0, 26);
+    // ID bazlı Map — eşleşmeyi garantiler
+    const candidateMap = new Map();
+    [...c1, ...c2, ...c3].forEach((c) => {
+      if (!candidateMap.has(c.id)) {
+        candidateMap.set(c.id, c);
+      }
+    });
+
+    const candidates = Array.from(candidateMap.values()).slice(0, 36);
 
     const ai = await askAI({ candidates, genre, mood, type });
 
     const recs = (ai.recommendations || [])
-      .filter((r) => typeof r?.id === "number")
+      .filter((r) => typeof r?.id === "number" && candidateMap.has(r.id)) // sadece gerçek ID'ler
       .slice(0, 5)
       .map((r) => {
-        const c = candidates.find((x) => x.id === r.id);
+        const c = candidateMap.get(r.id);
         return {
           id: r.id,
-          title: c?.title || "Untitled",
-          type: c?.type,
-          year: c?.year,
-          rating: c?.rating,
-          poster_path: c?.poster_path,
+          title: c.title,
+          type: c.type,
+          year: c.year,
+          rating: c.rating,
+          poster_path: c.poster_path,
           reason: r.reason || "Matched your preferences.",
         };
       });
+
+    // Yeterli öneri gelmezse log at
+    if (recs.length < 3) {
+      console.log("Warning: only", recs.length, "valid recs returned");
+    }
 
     res.json({ recommendations: recs });
   } catch (e) {
@@ -180,4 +206,4 @@ app.post("/recommend", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🤖 AI server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🤖 Cinefy AI server running on http://localhost:${PORT}`));
