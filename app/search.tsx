@@ -100,7 +100,7 @@ export default function SearchScreen() {
         {t.search}
       </Text>
       <Text style={{ marginTop: 6, color: theme.muted }}>
-        {t.searchPlaceholder}
+        {t.searchPlaceholder2}
       </Text>
 
       <View style={{ marginTop: 14, flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -236,7 +236,7 @@ export default function SearchScreen() {
                   <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: "rgba(124,92,252,0.18)", borderWidth: 1, borderColor: "rgba(124,92,252,0.35)" }}>
                     <Text style={{ color: theme.text, fontWeight: "800", fontSize: 12 }}>⭐ {(item.vote_average ?? 0).toFixed(1)}</Text>
                   </View>
-                  <Text style={{ color: theme.muted, fontSize: 12 }}>Tap to see where to watch</Text>
+               
                 </View>
               </View>
             </Pressable>

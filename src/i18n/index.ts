@@ -6,12 +6,13 @@ export const lang: "tr" | "en" = deviceLang === "tr" ? "tr" : "en";
 const translations = {
   en: {
     // Tabs
-    search: "Search",
+    search: "Discover",
     favorites: "Favorites",
     explore: "Explore",
 
     // Search screen
     searchPlaceholder: "Search movies & TV shows...",
+    searchPlaceholder2: " Search movies & TV shows and see where to watch.",
     searchEmpty: "Search for a movie or TV show above.",
 
     // Favorites screen
@@ -70,12 +71,13 @@ detailOpenTmdb: "Open on TMDB",
   },
   tr: {
     // Tabs
-    search: "Ara",
+    search: "Keşfet",
     favorites: "Favoriler",
     explore: "Keşfet",
 
     // Search screen
     searchPlaceholder: "Film veya dizi ara...",
+    searchPlaceholder2: " Film veya dizi ara ve nerede izlenir gör.",
     searchEmpty: "Yukarıdan film veya dizi arayabilirsin.",
 
     // Favorites screen
