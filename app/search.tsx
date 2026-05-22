@@ -15,7 +15,7 @@ type MediaType = "movie" | "tv" | "person";
 
 type SearchItem = {
   id: number;
-  media_type: MediaType;
+  media_type?: MediaType;
   title?: string;
   name?: string;
   poster_path: string | null;
@@ -65,10 +65,16 @@ export default function SearchScreen() {
     let cancelled = false;
     async function loadTrending() {
       try {
-        const data = await tmdbGet<{ results: SearchItem[] }>("/trending/all/day", { language: "en-US" });
+        setLoading(true);
+        setError(null);
+        const data = await tmdbGet<{ results: SearchItem[] }>("/trending/movie/day", { language: "en-US" });
         if (cancelled) return;
-        setTrending((data.results || []).filter((x) => x.media_type === "movie" || x.media_type === "tv"));
-      } catch {}
+        setTrending((data.results || []).map((x) => ({ ...x, media_type: "movie" })));
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message ?? "Could not load movies");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
     loadTrending();
     return () => { cancelled = true; };
@@ -188,7 +194,7 @@ export default function SearchScreen() {
           const title = item.title ?? item.name ?? "Untitled";
           const img = posterUrl(item.poster_path);
           const year = (item.release_date || item.first_air_date || "").slice(0, 4);
-          const type = item.media_type as "movie" | "tv";
+          const type = (item.media_type ?? "movie") as "movie" | "tv";
           const favKey = `${type}-${item.id}`;
           const isFav = favSet.has(favKey);
 

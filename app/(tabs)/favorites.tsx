@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { getFavorites, toggleFavorite, FavItem } from "../../src/storage/favorites";

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Pressable, ScrollView, Text, View, Image, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import { theme } from "../../src/ui/theme";

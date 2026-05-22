@@ -25,7 +25,7 @@ useEffect(() => {
     }
   }
   check();
-}, []);
+}, [router]);
   return (
     <SafeAreaProvider>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
