@@ -99,6 +99,27 @@ async function discoverByGenre({ type, genre, page = 1 }) {
     .filter((x) => x.title.length > 0); // başlıksız öğeleri at
 }
 
+async function discoverCandidates({ type, genre }) {
+  const mediaTypes = type === "all" ? ["movie", "tv"] : [type];
+  const pages = [1, 2, 3];
+  const groups = await Promise.all(
+    mediaTypes.flatMap((mediaType) =>
+      pages.map((page) => discoverByGenre({ type: mediaType, genre, page }))
+    )
+  );
+  if (type !== "all") return groups.flat();
+
+  const movies = groups.filter((_, index) => index < pages.length).flat();
+  const tvShows = groups.filter((_, index) => index >= pages.length).flat();
+  const mixed = [];
+  const maxLength = Math.max(movies.length, tvShows.length);
+  for (let i = 0; i < maxLength; i += 1) {
+    if (movies[i]) mixed.push(movies[i]);
+    if (tvShows[i]) mixed.push(tvShows[i]);
+  }
+  return mixed;
+}
+
 async function askAI({ candidates, genre, mood, type }) {
   if (!OPENAI) throw new Error("Missing OPENAI_API_KEY");
 
@@ -119,7 +140,8 @@ RULES:
 - Each "reason" must be 2-3 sentences. Describe the emotional experience of watching it: the atmosphere, pacing, themes. NOT plot summary.
 - Match the mood closely. If the user says "cozy", pick comfort films. If "dark", lean into tension and moral complexity.
 - Vary your picks: don't pick 5 similar films. Give range.
-- Return ONLY valid JSON, no extra text: {"recommendations":[{"id":number,"reason":string}]}
+- If the request type is "all" and both movies and TV shows are available, include at least 2 movies and at least 2 TV shows.
+- Return ONLY valid JSON, no extra text: {"recommendations":[{"id":number,"type":"movie|tv","reason":string}]}
 
 GOOD reason example:
 "A slow-burn thriller that wraps you in paranoia from the first frame. The kind of film you watch with the lights off: unsettling, elegant, and impossible to shake."
@@ -160,39 +182,71 @@ BAD reason example:
   if (!content) throw new Error("OpenAI returned empty content");
   return JSON.parse(content);
 }
+
+function toRecommendation(item, reason) {
+  return {
+    id: item.id,
+    title: item.title,
+    type: item.type,
+    year: item.year,
+    rating: item.rating,
+    poster_path: item.poster_path,
+    reason: reason || "A strong match for your selected genre and mood.",
+  };
+}
+
+function balanceRecommendationsForAll(recs, candidates) {
+  const hasMovie = recs.some((item) => item.type === "movie");
+  const hasTv = recs.some((item) => item.type === "tv");
+  if (hasMovie && hasTv) return recs;
+
+  const existingKeys = new Set(recs.map((item) => `${item.type}-${item.id}`));
+  const neededType = hasMovie ? "tv" : "movie";
+  const fallback = candidates.find(
+    (item) => item.type === neededType && !existingKeys.has(`${item.type}-${item.id}`)
+  );
+  if (!fallback) return recs;
+
+  return [...recs.slice(0, 4), toRecommendation(fallback)];
+}
+
 app.get("/health", (_, res) => res.json({ ok: true }));
 
 app.post("/recommend", async (req, res) => {
   try {
-    const { type = "movie", genre = "comedy", mood = "" } = req.body || {};
+    const { type = "all", genre = "comedy", mood = "" } = req.body || {};
 
     if (!TMDB) throw new Error("Missing TMDB_API_KEY");
     if (!OPENAI) throw new Error("Missing OPENAI_API_KEY");
     if (!GENRE_MAP[String(genre).toLowerCase()]) throw new Error("Invalid genre");
+    if (!["all", "movie", "tv"].includes(type)) throw new Error("Invalid type");
 
-    const [c1, c2, c3] = await Promise.all([
-      discoverByGenre({ type, genre, page: 1 }),
-      discoverByGenre({ type, genre, page: 2 }),
-      discoverByGenre({ type, genre, page: 3 }), // 3. sayfa eklendi — çeşitlilik artar
-    ]);
+    const discovered = await discoverCandidates({ type, genre });
 
-    // ID bazlı Map — eşleşmeyi garantiler
     const candidateMap = new Map();
-    [...c1, ...c2, ...c3].forEach((c) => {
-      if (!candidateMap.has(c.id)) {
-        candidateMap.set(c.id, c);
+    discovered.forEach((c) => {
+      const key = c.type + "-" + c.id;
+      if (!candidateMap.has(key)) {
+        candidateMap.set(key, c);
       }
     });
 
-    const candidates = Array.from(candidateMap.values()).slice(0, 36);
+    const candidates = Array.from(candidateMap.values()).slice(0, 48);
 
     const ai = await askAI({ candidates, genre, mood, type });
 
     const recs = (ai.recommendations || [])
-      .filter((r) => typeof r?.id === "number" && candidateMap.has(r.id)) // sadece gerçek ID'ler
+      .filter((r) => {
+        if (typeof r?.id !== "number") return false;
+        if (typeof r?.type === "string") return candidateMap.has(r.type + "-" + r.id);
+        return Array.from(candidateMap.values()).some((c) => c.id === r.id);
+      })
       .slice(0, 5)
       .map((r) => {
-        const c = candidateMap.get(r.id);
+        const c =
+          typeof r?.type === "string"
+            ? candidateMap.get(r.type + "-" + r.id)
+            : Array.from(candidateMap.values()).find((item) => item.id === r.id);
         return {
           id: r.id,
           title: c.title,
@@ -204,17 +258,17 @@ app.post("/recommend", async (req, res) => {
         };
       });
 
-    // Yeterli öneri gelmezse log at
-    if (recs.length < 3) {
-      console.log("Warning: only", recs.length, "valid recs returned");
+    const finalRecs = type === "all" ? balanceRecommendationsForAll(recs, candidates) : recs;
+
+    if (finalRecs.length < 3) {
+      console.log("Warning: only", finalRecs.length, "valid recs returned");
     }
 
-    res.json({ recommendations: recs });
+    res.json({ recommendations: finalRecs });
   } catch (e) {
     console.log("RECOMMEND ERROR:", e);
     res.status(500).json({ error: e?.message || "recommend failed" });
   }
 });
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🤖 Cinefy AI server running on http://localhost:${PORT}`));

@@ -67,9 +67,20 @@ export default function SearchScreen() {
       try {
         setLoading(true);
         setError(null);
-        const data = await tmdbGet<{ results: SearchItem[] }>("/trending/movie/day", { language: "en-US" });
+        const [movies, tvShows] = await Promise.all([
+          tmdbGet<{ results: SearchItem[] }>("/trending/movie/day", { language: "en-US" }),
+          tmdbGet<{ results: SearchItem[] }>("/trending/tv/day", { language: "en-US" }),
+        ]);
         if (cancelled) return;
-        setTrending((data.results || []).map((x) => ({ ...x, media_type: "movie" })));
+        const movieItems = (movies.results || []).map((x) => ({ ...x, media_type: "movie" as const }));
+        const tvItems = (tvShows.results || []).map((x) => ({ ...x, media_type: "tv" as const }));
+        const mixed: SearchItem[] = [];
+        const maxLength = Math.max(movieItems.length, tvItems.length);
+        for (let i = 0; i < maxLength; i += 1) {
+          if (movieItems[i]) mixed.push(movieItems[i]);
+          if (tvItems[i]) mixed.push(tvItems[i]);
+        }
+        setTrending(mixed);
       } catch (e: any) {
         if (!cancelled) setError(e?.message ?? "Could not load movies");
       } finally {

@@ -49,7 +49,7 @@ const MOODS = [
 
 export default function ExploreAI() {
   const router = useRouter();
-  const [type, setType] = useState<"movie" | "tv">("movie");
+  const [type, setType] = useState<"all" | "movie" | "tv">("all");
   const [genre, setGenre] = useState("comedy");
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -105,8 +105,9 @@ export default function ExploreAI() {
 
         {/* Type toggle */}
         <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}>
-          {(["movie", "tv"] as const).map((tp) => {
+          {(["all", "movie", "tv"] as const).map((tp) => {
             const active = tp === type;
+            const label = tp === "all" ? "ALL" : tp.toUpperCase();
             return (
               <Pressable
                 key={tp}
@@ -117,7 +118,7 @@ export default function ExploreAI() {
                   backgroundColor: active ? "rgba(124,92,252,0.22)" : theme.card,
                 }}
               >
-                <Text style={{ color: theme.text, fontWeight: "900" }}>{tp.toUpperCase()}</Text>
+                <Text style={{ color: theme.text, fontWeight: "900" }}>{label}</Text>
               </Pressable>
             );
           })}
