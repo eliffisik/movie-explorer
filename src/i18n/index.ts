@@ -71,9 +71,9 @@ detailOpenTmdb: "Open on TMDB",
   },
   tr: {
     // Tabs
-    search: "Keşfet",
+    search: "Ara",
     favorites: "Favoriler",
-    explore: "Keşfet",
+    explore: "AI Öneri",
 
     // Search screen
     searchPlaceholder: "Film veya dizi ara...",
