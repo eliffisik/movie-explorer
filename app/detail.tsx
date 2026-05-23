@@ -23,6 +23,10 @@ type Detail = {
   vote_average: number;
   release_date?: string;
   first_air_date?: string;
+  runtime?: number;
+  number_of_seasons?: number;
+  number_of_episodes?: number;
+  genres?: { id: number; name: string }[];
 };
 
 type Provider = {
@@ -190,6 +194,9 @@ export default function DetailScreen() {
   const noProviders = flatrateProviders.length === 0 && rentProviders.length === 0 && buyProviders.length === 0;
   const hero = backdropUrl(item?.backdrop_path) || posterUrl(item?.poster_path ?? null, "w500");
   const trailerLink = youtubeUrl(trailer);
+  const runtimeLabel = item?.runtime ? `${item.runtime} min` : null;
+  const seasonLabel = item?.number_of_seasons ? `${item.number_of_seasons} season${item.number_of_seasons === 1 ? "" : "s"}` : null;
+  const episodeLabel = item?.number_of_episodes ? `${item.number_of_episodes} episodes` : null;
 
   return (
     <>
@@ -259,7 +266,32 @@ export default function DetailScreen() {
                   <View style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: theme.border }}>
                     <Text style={{ color: theme.text, fontWeight: "800" }}>{type?.toUpperCase()}</Text>
                   </View>
+                  {type === "movie" && runtimeLabel ? (
+                    <View style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: theme.border }}>
+                      <Text style={{ color: theme.text, fontWeight: "800" }}>{runtimeLabel}</Text>
+                    </View>
+                  ) : null}
+                  {type === "tv" && seasonLabel ? (
+                    <View style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: theme.border }}>
+                      <Text style={{ color: theme.text, fontWeight: "800" }}>{seasonLabel}</Text>
+                    </View>
+                  ) : null}
+                  {type === "tv" && episodeLabel ? (
+                    <View style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: theme.border }}>
+                      <Text style={{ color: theme.text, fontWeight: "800" }}>{episodeLabel}</Text>
+                    </View>
+                  ) : null}
                 </View>
+
+                {item.genres?.length ? (
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+                    {item.genres.map((genre) => (
+                      <View key={genre.id} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: "rgba(124,92,252,0.14)", borderWidth: 1, borderColor: "rgba(124,92,252,0.28)" }}>
+                        <Text style={{ color: theme.text, fontWeight: "800", fontSize: 12 }}>{genre.name}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
 
                 <Text style={{ marginTop: 12, color: theme.muted, lineHeight: 21 }}>
                   {item.overview || "No overview."}
