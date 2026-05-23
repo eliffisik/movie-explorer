@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Pressable, ScrollView, Text, View, Image, Modal } from "react-native";
+import { Pressable, ScrollView, Text, View, Image, Modal, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { theme } from "../../src/ui/theme";
 import { posterUrl } from "../../src/utils/image";
@@ -7,7 +7,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { t } from "../../src/i18n";
 
-const API_BASE = (process.env.EXPO_PUBLIC_AI_API_BASE ?? "http://localhost:3000").replace(/\/$/, "");
+const API_BASES = [
+  process.env.EXPO_PUBLIC_AI_API_BASE,
+  Platform.OS === "web" ? "http://localhost:3000" : undefined,
+  Platform.OS === "web" ? "http://127.0.0.1:3000" : undefined,
+].filter(Boolean).map((url) => url!.replace(/\/$/, ""));
 
 type Rec = {
   id: number;
@@ -66,13 +70,25 @@ export default function ExploreAI() {
       setLoading(true);
       setError(null);
       setItems([]);
-      const res = await fetch(`${API_BASE}/recommend`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, genre, mood: selectedMoods.join(", ") }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Request failed");
+      let response: Response | null = null;
+      let lastError: unknown = null;
+
+      for (const baseUrl of API_BASES) {
+        try {
+          response = await fetch(`${baseUrl}/recommend`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type, genre, mood: selectedMoods.join(", ") }),
+          });
+          break;
+        } catch (e) {
+          lastError = e;
+        }
+      }
+
+      if (!response) throw lastError ?? new Error("AI server is not reachable");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || "Request failed");
       setItems(data.recommendations || []);
     } catch (e: any) {
       setError(e?.message ?? "AI error");
