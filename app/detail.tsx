@@ -40,12 +40,44 @@ type WatchProvidersResponse = {
   }>;
 };
 
+type CastMember = {
+  id: number;
+  name: string;
+  character?: string;
+  profile_path: string | null;
+};
+
+type CreditsResponse = {
+  cast: CastMember[];
+};
+
+type Video = {
+  id: string;
+  key: string;
+  name: string;
+  site: string;
+  type: string;
+  official?: boolean;
+};
+
+type VideosResponse = {
+  results: Video[];
+};
+
 function providerLogo(path: string | null) {
   return path ? `https://image.tmdb.org/t/p/w92${path}` : null;
 }
 
 function backdropUrl(path: string | null | undefined) {
   return path ? `https://image.tmdb.org/t/p/w780${path}` : null;
+}
+
+function profileUrl(path: string | null) {
+  return path ? `https://image.tmdb.org/t/p/w185${path}` : null;
+}
+
+function youtubeUrl(video: Video | null) {
+  return video ? `https://www.youtube.com/watch?v=${video.key}` : null;
 }
 
 function ProviderRow({ title, items }: { title: string; items: Provider[] }) {
@@ -81,6 +113,8 @@ export default function DetailScreen() {
   const [providerLink, setProviderLink] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [isFav, setIsFav] = useState(false);
+  const [cast, setCast] = useState<CastMember[]>([]);
+  const [trailer, setTrailer] = useState<Video | null>(null);
 
   useEffect(() => {
     getRegion().then(setRegionState).catch(() => setRegionState("US"));
@@ -101,12 +135,20 @@ export default function DetailScreen() {
         setLoading(true);
         setError(null);
         if (!id || !type) throw new Error("Missing params");
-        const [detail, wp] = await Promise.all([
+        const [detail, wp, credits, videos] = await Promise.all([
           tmdbGet<Detail>(`/${type}/${id}`, { language: "en-US" }),
           tmdbGet<WatchProvidersResponse>(`/${type}/${id}/watch/providers`),
+          tmdbGet<CreditsResponse>(`/${type}/${id}/credits`, { language: "en-US" }),
+          tmdbGet<VideosResponse>(`/${type}/${id}/videos`, { language: "en-US" }),
         ]);
         if (cancelled) return;
         setItem(detail);
+        setCast((credits.cast || []).slice(0, 10));
+        setTrailer(
+          (videos.results || []).find((v) => v.site === "YouTube" && v.type === "Trailer" && v.official) ||
+          (videos.results || []).find((v) => v.site === "YouTube" && v.type === "Trailer") ||
+          null
+        );
         const byRegion = wp.results?.[region];
         setProviderLink(byRegion?.link);
         setFlatrateProviders(byRegion?.flatrate ?? []);
@@ -147,6 +189,7 @@ export default function DetailScreen() {
 
   const noProviders = flatrateProviders.length === 0 && rentProviders.length === 0 && buyProviders.length === 0;
   const hero = backdropUrl(item?.backdrop_path) || posterUrl(item?.poster_path ?? null, "w500");
+  const trailerLink = youtubeUrl(trailer);
 
   return (
     <>
@@ -222,6 +265,22 @@ export default function DetailScreen() {
                   {item.overview || "No overview."}
                 </Text>
 
+                {trailerLink ? (
+                  <Pressable
+                    onPress={async () => {
+                      const can = await Linking.canOpenURL(trailerLink);
+                      if (can) await Linking.openURL(trailerLink);
+                    }}
+                    style={{
+                      marginTop: 14, paddingVertical: 12, borderRadius: 16, borderWidth: 1,
+                      borderColor: "rgba(124,92,252,0.7)", backgroundColor: "rgba(124,92,252,0.22)",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={{ color: theme.text, fontWeight: "900" }}>Watch Trailer</Text>
+                  </Pressable>
+                ) : null}
+
                 {/* Favori butonu */}
                 <Pressable
                   onPress={async () => {
@@ -256,6 +315,30 @@ export default function DetailScreen() {
                 </Text>
                 {regionPicker}
               </View>
+
+              {cast.length > 0 ? (
+                <View style={{ marginTop: 16 }}>
+                  <Text style={{ fontSize: 20, fontWeight: "900", color: theme.text }}>Cast</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingTop: 10 }}>
+                    {cast.map((person) => {
+                      const img = profileUrl(person.profile_path);
+                      return (
+                        <View key={person.id} style={{ width: 112, borderRadius: 16, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card, overflow: "hidden" }}>
+                          <View style={{ height: 150, backgroundColor: "rgba(255,255,255,0.06)", alignItems: "center", justifyContent: "center" }}>
+                            {img ? <Image source={{ uri: img }} style={{ width: "100%", height: "100%" }} /> : <Text style={{ color: theme.muted }}>No Image</Text>}
+                          </View>
+                          <View style={{ padding: 10 }}>
+                            <Text style={{ color: theme.text, fontWeight: "900", fontSize: 13 }} numberOfLines={2}>{person.name}</Text>
+                            {person.character ? (
+                              <Text style={{ color: theme.muted, fontSize: 12, marginTop: 4 }} numberOfLines={2}>{person.character}</Text>
+                            ) : null}
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              ) : null}
 
               <View style={{ marginTop: 16 }}>
                 <Text style={{ fontSize: 20, fontWeight: "900", color: theme.text }}>{t.detailWhere}</Text>
