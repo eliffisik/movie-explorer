@@ -11,6 +11,9 @@ import { t } from "../../src/i18n";
 export default function FavoritesScreen() {
   const router = useRouter();
   const [items, setItems] = useState<FavItem[]>([]);
+  const [filter, setFilter] = useState<"all" | "movie" | "tv">("all");
+
+  const filteredItems = filter === "all" ? items : items.filter((item) => item.type === filter);
 
   const load = async () => {
     const favs = await getFavorites();
@@ -23,7 +26,7 @@ export default function FavoritesScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
       <FlatList
-        data={items}
+        data={filteredItems}
         keyExtractor={(x) => `${x.type}-${x.id}`}
         contentContainerStyle={{ padding: 16, paddingBottom: 28, flexGrow: 1 }}
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
@@ -35,6 +38,28 @@ export default function FavoritesScreen() {
             <Text style={{ color: theme.muted, marginTop: 6 }}>
               {t.favoritesSubtitle}
             </Text>
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+              {(["all", "movie", "tv"] as const).map((v) => {
+                const active = filter === v;
+                const label = v === "all" ? "All" : v === "movie" ? "Movies" : "TV";
+                return (
+                  <Pressable
+                    key={v}
+                    onPress={() => setFilter(v)}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: active ? "rgba(124,92,252,0.7)" : theme.border,
+                      backgroundColor: active ? "rgba(124,92,252,0.22)" : theme.card,
+                    }}
+                  >
+                    <Text style={{ color: theme.text, fontWeight: "900" }}>{label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
         }
         ListEmptyComponent={
