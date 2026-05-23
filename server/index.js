@@ -1,13 +1,21 @@
 import express from "express";
 import cors from "cors";
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const TMDB = process.env.TMDB_API_KEY;
-const GROQ = process.env.GROQ_API_KEY;
+const TMDB = (process.env.TMDB_API_KEY || process.env.EXPO_PUBLIC_TMDB_API_KEY || "")
+  .trim()
+  .replace(/^"|"$/g, "");
+const OPENAI = (process.env.OPENAI_API_KEY || "").trim().replace(/^"|"$/g, "");
 
 const GENRE_MAP = {
   comedy: 35,
@@ -46,8 +54,9 @@ async function tmdbGet(path, params = {}) {
   if (!TMDB) throw new Error("Missing TMDB_API_KEY");
 
   const url = new URL(`https://api.themoviedb.org/3${path}`);
-  url.searchParams.set("api_key", TMDB);
   url.searchParams.set("language", "en-US");
+  const isBearerToken = TMDB.startsWith("eyJ") || TMDB.startsWith("Bearer ");
+  if (!isBearerToken) url.searchParams.set("api_key", TMDB);
 
   for (const [k, v] of Object.entries(params)) {
     if (v !== undefined && v !== null && String(v).length > 0) {
@@ -55,7 +64,11 @@ async function tmdbGet(path, params = {}) {
     }
   }
 
-  const res = await fetch(url.toString());
+  const res = await fetch(url.toString(), {
+    headers: isBearerToken
+      ? { Authorization: TMDB.startsWith("Bearer ") ? TMDB : `Bearer ${TMDB}` }
+      : undefined,
+  });
   const data = await res.json();
 
   if (!res.ok) {
@@ -87,7 +100,7 @@ async function discoverByGenre({ type, genre, page = 1 }) {
 }
 
 async function askAI({ candidates, genre, mood, type }) {
-  if (!GROQ) throw new Error("Missing GROQ_API_KEY");
+  if (!OPENAI) throw new Error("Missing OPENAI_API_KEY");
 
   const compact = candidates.map((c) => ({
     id: c.id,
@@ -98,57 +111,55 @@ async function askAI({ candidates, genre, mood, type }) {
     type: c.type,
   }));
 
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${GROQ}`,
-    },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      temperature: 0.7,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content: `You are a passionate film critic with 20+ years of experience — think a mix of Roger Ebert's warmth and a film school professor's depth. Your job is to pick EXACTLY 5 items from the provided candidates list and explain WHY each one matches the user's mood.
+  const instructions = `You are a passionate film critic with 20+ years of experience. Your job is to pick EXACTLY 5 items from the provided candidates list and explain WHY each one matches the user's mood.
 
 RULES:
 - Pick ONLY from the candidates list. NEVER invent or suggest titles not in the list.
 - You MUST use the exact numeric ID from the candidates list. Do not change or guess IDs.
-- Each "reason" must be 2-3 sentences. Describe the emotional experience of watching it — the atmosphere, pacing, themes. NOT plot summary.
+- Each "reason" must be 2-3 sentences. Describe the emotional experience of watching it: the atmosphere, pacing, themes. NOT plot summary.
 - Match the mood closely. If the user says "cozy", pick comfort films. If "dark", lean into tension and moral complexity.
 - Vary your picks: don't pick 5 similar films. Give range.
 - Return ONLY valid JSON, no extra text: {"recommendations":[{"id":number,"reason":string}]}
 
 GOOD reason example:
-"A slow-burn thriller that wraps you in paranoia from the first frame. The kind of film you watch with the lights off — unsettling, elegant, and impossible to shake."
+"A slow-burn thriller that wraps you in paranoia from the first frame. The kind of film you watch with the lights off: unsettling, elegant, and impossible to shake."
 
 BAD reason example:
-"This movie matches your thriller and dark preferences."`,
-        },
-        {
-          role: "user",
-          content: JSON.stringify({
-            request: { type, genre, mood },
-            candidates: compact,
-          }),
-        },
-      ],
+"This movie matches your thriller and dark preferences."`;
+
+  const res = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${OPENAI}`,
+    },
+    body: JSON.stringify({
+      model: process.env.OPENAI_MODEL || "gpt-5.2",
+      instructions,
+      input: `Return JSON for this request only:\n${JSON.stringify({
+        request: { type, genre, mood },
+        candidates: compact,
+      })}`,
+      text: { format: { type: "json_object" } },
     }),
   });
 
   const data = await res.json();
   if (!res.ok) {
-    console.log("Groq error:", res.status, data);
-    throw new Error(data?.error?.message || "Groq request failed");
+    console.log("OpenAI error:", res.status, data);
+    throw new Error(data?.error?.message || "OpenAI request failed");
   }
 
-  const content = data?.choices?.[0]?.message?.content;
-  if (!content) throw new Error("Groq returned empty content");
+  const content =
+    data?.output_text ||
+    data?.output
+      ?.flatMap((item) => item?.content ?? [])
+      ?.map((part) => part?.text)
+      ?.filter(Boolean)
+      ?.join("");
+  if (!content) throw new Error("OpenAI returned empty content");
   return JSON.parse(content);
 }
-
 app.get("/health", (_, res) => res.json({ ok: true }));
 
 app.post("/recommend", async (req, res) => {
@@ -156,7 +167,7 @@ app.post("/recommend", async (req, res) => {
     const { type = "movie", genre = "comedy", mood = "" } = req.body || {};
 
     if (!TMDB) throw new Error("Missing TMDB_API_KEY");
-    if (!GROQ) throw new Error("Missing GROQ_API_KEY");
+    if (!OPENAI) throw new Error("Missing OPENAI_API_KEY");
     if (!GENRE_MAP[String(genre).toLowerCase()]) throw new Error("Invalid genre");
 
     const [c1, c2, c3] = await Promise.all([

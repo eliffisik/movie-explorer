@@ -7,7 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { t } from "../../src/i18n";
 
-const API_BASE = "https://movie-explorer-production-735c.up.railway.app";
+const API_BASE = (process.env.EXPO_PUBLIC_AI_API_BASE ?? "http://localhost:3000").replace(/\/$/, "");
 
 type Rec = {
   id: number;
