@@ -187,6 +187,18 @@ export default function SearchScreen() {
 
   const baseData = query.trim().length === 0 ? trending : results;
   const listData = filter === "all" ? baseData : baseData.filter((x) => x.media_type === filter);
+  const emptyTitle =
+    query.trim().length > 0
+      ? "No matches found"
+      : filter === "movie"
+        ? "No trending movies right now"
+        : filter === "tv"
+          ? "No trending TV shows right now"
+          : "No trending titles right now";
+  const emptySubtitle =
+    query.trim().length > 0
+      ? "Try another title or switch the filter."
+      : "Try refreshing in a moment or search for something specific.";
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -198,7 +210,13 @@ export default function SearchScreen() {
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         ListEmptyComponent={
           !loading ? (
-            <Text style={{ color: theme.muted, padding: 16 }}>{t.searchEmpty}</Text>
+            <View style={{ padding: 24, alignItems: "center" }}>
+              <View style={{ width: 58, height: 58, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(124,92,252,0.16)", borderWidth: 1, borderColor: "rgba(124,92,252,0.28)" }}>
+                <Text style={{ fontSize: 24 }}>⌕</Text>
+              </View>
+              <Text style={{ color: theme.text, fontWeight: "900", fontSize: 18, marginTop: 14, textAlign: "center" }}>{emptyTitle}</Text>
+              <Text style={{ color: theme.muted, marginTop: 6, textAlign: "center", lineHeight: 20 }}>{emptySubtitle}</Text>
+            </View>
           ) : null
         }
         renderItem={({ item }) => {
@@ -214,8 +232,8 @@ export default function SearchScreen() {
               onPress={() => router.push({ pathname: "/detail", params: { id: String(item.id), type } })}
               style={{
                 position: "relative", marginHorizontal: 16, padding: 12,
-                borderRadius: 18, borderWidth: 1, borderColor: theme.border,
-                backgroundColor: theme.card, flexDirection: "row", gap: 12, alignItems: "center",
+                borderRadius: 16, borderWidth: 1, borderColor: theme.border,
+                backgroundColor: theme.card, flexDirection: "row", gap: 14, alignItems: "center",
               }}
             >
               <Pressable
@@ -225,7 +243,7 @@ export default function SearchScreen() {
                   setFavSet(new Set(next.map((f) => `${f.type}-${f.id}`)));
                 }}
                 style={{
-                  position: "absolute", top: 10, right: 10, width: 38, height: 38,
+                  position: "absolute", top: 12, right: 12, width: 38, height: 38,
                   borderRadius: 12, borderWidth: 1, borderColor: theme.border,
                   backgroundColor: "rgba(0,0,0,0.35)", alignItems: "center", justifyContent: "center", zIndex: 10,
                 }}
@@ -235,7 +253,7 @@ export default function SearchScreen() {
                 </Text>
               </Pressable>
 
-              <View style={{ width: 62, height: 92, borderRadius: 12, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)", alignItems: "center", justifyContent: "center" }}>
+              <View style={{ width: 72, height: 108, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)", alignItems: "center", justifyContent: "center" }}>
                 {img ? (
                   <Image source={{ uri: img }} style={{ width: "100%", height: "100%" }} />
                 ) : (
@@ -246,14 +264,20 @@ export default function SearchScreen() {
                 )}
               </View>
 
-              <View style={{ flex: 1, gap: 6 }}>
-                <Text style={{ fontSize: 16, fontWeight: "800", color: theme.text }} numberOfLines={2}>{title}</Text>
-                <Text style={{ color: theme.muted }}>{type.toUpperCase()} {year ? `• ${year}` : ""}</Text>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                  <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: "rgba(124,92,252,0.18)", borderWidth: 1, borderColor: "rgba(124,92,252,0.35)" }}>
-                    <Text style={{ color: theme.text, fontWeight: "800", fontSize: 12 }}>⭐ {(item.vote_average ?? 0).toFixed(1)}</Text>
+              <View style={{ flex: 1, gap: 8, paddingRight: 44 }}>
+                <Text style={{ fontSize: 17, fontWeight: "900", color: theme.text, lineHeight: 22 }} numberOfLines={2}>{title}</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, backgroundColor: type === "tv" ? "rgba(34,197,94,0.14)" : "rgba(124,92,252,0.16)", borderWidth: 1, borderColor: type === "tv" ? "rgba(34,197,94,0.28)" : "rgba(124,92,252,0.3)" }}>
+                    <Text style={{ color: theme.text, fontWeight: "900", fontSize: 11 }}>{type === "tv" ? "TV" : "MOVIE"}</Text>
                   </View>
-               
+                  {year ? (
+                    <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: theme.border }}>
+                      <Text style={{ color: theme.muted, fontWeight: "800", fontSize: 11 }}>{year}</Text>
+                    </View>
+                  ) : null}
+                  <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, backgroundColor: "rgba(250,204,21,0.12)", borderWidth: 1, borderColor: "rgba(250,204,21,0.26)" }}>
+                    <Text style={{ color: theme.text, fontWeight: "900", fontSize: 11 }}>RATING {(item.vote_average ?? 0).toFixed(1)}</Text>
+                  </View>
                 </View>
               </View>
             </Pressable>
