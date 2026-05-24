@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { createElement, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator, Image, Pressable,
-  ScrollView, Text, View, Linking,
+  ScrollView, Text, View, Linking, Modal, Platform,
 } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -93,6 +93,14 @@ function youtubeUrl(video: Video | null) {
   return video ? `https://www.youtube.com/watch?v=${video.key}` : null;
 }
 
+function youtubeEmbedUrl(video: Video | null) {
+  return video ? `https://www.youtube.com/embed/${video.key}?autoplay=1&rel=0&modestbranding=1` : null;
+}
+
+function youtubeThumbnail(video: Video | null) {
+  return video ? `https://img.youtube.com/vi/${video.key}/hqdefault.jpg` : null;
+}
+
 function ProviderRow({ title, items }: { title: string; items: Provider[] }) {
   if (!items?.length) return null;
   return (
@@ -128,6 +136,7 @@ export default function DetailScreen() {
   const [isFav, setIsFav] = useState(false);
   const [cast, setCast] = useState<CastMember[]>([]);
   const [trailer, setTrailer] = useState<Video | null>(null);
+  const [trailerModalVisible, setTrailerModalVisible] = useState(false);
 
   useEffect(() => {
     getRegion().then(setRegionState).catch(() => setRegionState("US"));
@@ -203,6 +212,8 @@ export default function DetailScreen() {
   const noProviders = flatrateProviders.length === 0 && rentProviders.length === 0 && buyProviders.length === 0;
   const hero = backdropUrl(item?.backdrop_path) || posterUrl(item?.poster_path ?? null, "w500");
   const trailerLink = youtubeUrl(trailer);
+  const trailerEmbedLink = youtubeEmbedUrl(trailer);
+  const trailerThumb = youtubeThumbnail(trailer);
   const runtimeLabel = item?.runtime ? `${item.runtime} min` : null;
   const seasonLabel = item?.number_of_seasons ? `${item.number_of_seasons} season${item.number_of_seasons === 1 ? "" : "s"}` : null;
   const episodeLabel = item?.number_of_episodes ? `${item.number_of_episodes} episodes` : null;
@@ -301,26 +312,41 @@ export default function DetailScreen() {
                   </View>
                 ) : null}
 
+                {trailerLink ? (
+                  <Pressable
+                    onPress={() => setTrailerModalVisible(true)}
+                    style={{
+                      marginTop: 14,
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      borderColor: "rgba(139,92,246,0.45)",
+                      backgroundColor: theme.card,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <View style={{ height: 142, backgroundColor: "rgba(255,255,255,0.06)" }}>
+                      {trailerThumb ? (
+                        <Image source={{ uri: trailerThumb }} style={{ width: "100%", height: "100%", opacity: 0.72 }} />
+                      ) : null}
+                      <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, backgroundColor: "rgba(8,11,18,0.38)" }} />
+                      <View style={{ position: "absolute", left: 14, right: 14, bottom: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ color: theme.text, fontWeight: "900", fontSize: 18 }}>Watch Trailer</Text>
+                          <Text style={{ color: theme.muted, marginTop: 3 }} numberOfLines={1}>
+                            {trailer?.name ?? `${title} trailer`}
+                          </Text>
+                        </View>
+                        <View style={{ width: 54, height: 54, borderRadius: 18, backgroundColor: "rgba(139,92,246,0.88)", alignItems: "center", justifyContent: "center" }}>
+                          <Ionicons name="play" size={25} color="#fff" style={{ marginLeft: 3 }} />
+                        </View>
+                      </View>
+                    </View>
+                  </Pressable>
+                ) : null}
+
                 <Text style={{ marginTop: 12, color: theme.muted, lineHeight: 21 }}>
                   {item.overview || "No overview."}
                 </Text>
-
-                {trailerLink ? (
-                  <Pressable
-                    onPress={async () => {
-                      const can = await Linking.canOpenURL(trailerLink);
-                      if (can) await Linking.openURL(trailerLink);
-                    }}
-                    style={{
-                      marginTop: 14, paddingVertical: 12, borderRadius: 18, borderWidth: 1,
-                      borderColor: "rgba(139,92,246,0.7)", backgroundColor: "rgba(139,92,246,0.22)",
-                      alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8,
-                    }}
-                  >
-                    <Ionicons name="play-circle" size={19} color={theme.text} />
-                    <Text style={{ color: theme.text, fontWeight: "900" }}>Watch Trailer</Text>
-                  </Pressable>
-                ) : null}
 
                 {/* Favori butonu */}
                 <Pressable
@@ -407,6 +433,78 @@ export default function DetailScreen() {
           </ScrollView>
         )}
       </View>
+
+      <Modal
+        visible={trailerModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setTrailerModalVisible(false)}
+      >
+        <Pressable
+          onPress={() => setTrailerModalVisible(false)}
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.78)", justifyContent: "center", padding: 16 }}
+        >
+          <Pressable
+            onPress={() => {}}
+            style={{
+              borderRadius: 22,
+              borderWidth: 1,
+              borderColor: theme.borderStrong,
+              backgroundColor: theme.surface,
+              overflow: "hidden",
+              ...cardShadow,
+            }}
+          >
+            <View style={{ padding: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: theme.text, fontWeight: "900", fontSize: 16 }} numberOfLines={1}>
+                  {trailer?.name ?? "Trailer"}
+                </Text>
+                <Text style={{ color: theme.muted, marginTop: 2 }} numberOfLines={1}>
+                  {title}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setTrailerModalVisible(false)}
+                style={{ width: 38, height: 38, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border }}
+              >
+                <Ionicons name="close" size={20} color={theme.text} />
+              </Pressable>
+            </View>
+
+            <View style={{ aspectRatio: 16 / 9, backgroundColor: "#000" }}>
+              {Platform.OS === "web" && trailerEmbedLink ? (
+                createElement("iframe", {
+                  src: trailerEmbedLink,
+                  title: `${title} trailer`,
+                  style: { border: 0, width: "100%", height: "100%" },
+                  allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+                  allowFullScreen: true,
+                })
+              ) : (
+                <Pressable
+                  onPress={async () => {
+                    if (!trailerLink) return;
+                    const can = await Linking.canOpenURL(trailerLink);
+                    if (can) await Linking.openURL(trailerLink);
+                  }}
+                  style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+                >
+                  {trailerThumb ? (
+                    <Image source={{ uri: trailerThumb }} style={{ position: "absolute", width: "100%", height: "100%", opacity: 0.66 }} />
+                  ) : null}
+                  <View style={{ width: 68, height: 68, borderRadius: 24, backgroundColor: "rgba(139,92,246,0.9)", alignItems: "center", justifyContent: "center" }}>
+                    <Ionicons name="logo-youtube" size={34} color="#fff" />
+                  </View>
+                  <Text style={{ color: theme.text, fontWeight: "900", marginTop: 12 }}>
+                    Open trailer
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </>
   );
 }
