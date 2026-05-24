@@ -21,6 +21,15 @@ const translations = {
     favoritesEmpty: "No favorites yet",
     favoritesEmptyDesc: "Movies and TV shows you save will appear here.",
     favoritesBrowse: "Browse Movies",
+    libraryTitle: "Library",
+    librarySubtitle: "Favorites, watchlist, and watched titles",
+    libraryFavorites: "Favorites",
+    libraryWatchlist: "Watchlist",
+    libraryWatched: "Watched",
+    libraryWatchlistEmpty: "Your watchlist is empty",
+    libraryWatchedEmpty: "No watched titles yet",
+    libraryWatchEmptyDesc: "Open a movie or TV show detail page to add it here.",
+    libraryInWatchlist: "In watchlist",
 
     // Explore screen
     exploreTitle: "What do you want to watch?",
@@ -57,6 +66,8 @@ const translations = {
     detailOverview: "Overview",
     detailFavorite: "Add to Favorites",
     detailFavoriteRemove: "Remove from Favorites",
+    detailWatchlist: "Watchlist",
+    detailWatched: "Watched",
 
     // Errors
     errorTryAgain: "Try Again",
@@ -86,6 +97,15 @@ detailOpenTmdb: "Open on TMDB",
     favoritesEmpty: "Henüz favori yok",
     favoritesEmptyDesc: "Kaydettiğin film ve diziler burada görünecek.",
     favoritesBrowse: "Filmlere Göz At",
+    libraryTitle: "Kitaplık",
+    librarySubtitle: "Favoriler, izleme listesi ve izlenenler",
+    libraryFavorites: "Favoriler",
+    libraryWatchlist: "İzleme Listesi",
+    libraryWatched: "İzledim",
+    libraryWatchlistEmpty: "İzleme listen boş",
+    libraryWatchedEmpty: "Henüz izlenen yok",
+    libraryWatchEmptyDesc: "Buraya eklemek için bir film veya dizi detayını aç.",
+    libraryInWatchlist: "İzleme listesinde",
 
     // Explore screen
     exploreTitle: "Ne izlemek istersin?",
@@ -122,6 +142,8 @@ detailOpenTmdb: "Open on TMDB",
     detailOverview: "Özet",
     detailFavorite: "Favorilere Ekle",
     detailFavoriteRemove: "Favorilerden Çıkar",
+    detailWatchlist: "İzleme Listesi",
+    detailWatched: "İzledim",
 
     // Errors
     errorTryAgain: "Tekrar Dene",

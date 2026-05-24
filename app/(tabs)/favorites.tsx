@@ -3,6 +3,7 @@ import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { getFavorites, toggleFavorite, FavItem } from "../../src/storage/favorites";
+import { getWatchItems, removeWatchStatus, WatchItem } from "../../src/storage/watchlist";
 import { posterUrl } from "../../src/utils/image";
 import { theme } from "../../src/ui/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,13 +21,20 @@ const cardShadow = {
 export default function FavoritesScreen() {
   const router = useRouter();
   const [items, setItems] = useState<FavItem[]>([]);
+  const [watchItems, setWatchItems] = useState<WatchItem[]>([]);
+  const [section, setSection] = useState<"favorites" | "watchlist" | "watched">("favorites");
   const [filter, setFilter] = useState<"all" | "movie" | "tv">("all");
 
-  const filteredItems = filter === "all" ? items : items.filter((item) => item.type === filter);
+  const baseItems =
+    section === "favorites"
+      ? items
+      : watchItems.filter((item) => item.status === section);
+  const filteredItems = filter === "all" ? baseItems : baseItems.filter((item) => item.type === filter);
 
   const load = async () => {
-    const favs = await getFavorites();
+    const [favs, savedWatchItems] = await Promise.all([getFavorites(), getWatchItems()]);
     setItems(favs);
+    setWatchItems(savedWatchItems);
   };
 
   useFocusEffect(useCallback(() => { load(); }, []));
@@ -45,15 +53,44 @@ export default function FavoritesScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 30, fontWeight: "900", color: theme.text }}>
-                  {t.favoritesTitle}
+                  {t.libraryTitle}
                 </Text>
                 <Text style={{ color: theme.muted, marginTop: 6 }}>
-                  {t.favoritesSubtitle}
+                  {t.librarySubtitle}
                 </Text>
               </View>
               <View style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: "rgba(250,204,21,0.14)", borderWidth: 1, borderColor: "rgba(250,204,21,0.35)", alignItems: "center", justifyContent: "center" }}>
                 <Ionicons name="star" size={24} color={theme.gold} />
               </View>
+            </View>
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
+              {([
+                { value: "favorites", label: t.libraryFavorites, icon: "star" },
+                { value: "watchlist", label: t.libraryWatchlist, icon: "bookmark" },
+                { value: "watched", label: t.libraryWatched, icon: "checkmark-circle" },
+              ] as const).map((v) => {
+                const active = section === v.value;
+                return (
+                  <Pressable
+                    key={v.value}
+                    onPress={() => setSection(v.value)}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 9,
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: active ? "rgba(139,92,246,0.7)" : theme.border,
+                      backgroundColor: active ? "rgba(139,92,246,0.2)" : theme.card,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <Ionicons name={v.icon} size={14} color={active ? theme.text : theme.muted} />
+                    <Text style={{ color: active ? theme.text : theme.muted, fontWeight: "900" }}>{v.label}</Text>
+                  </Pressable>
+                );
+              })}
             </View>
             <View style={{ flexDirection: "row", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
               {(["all", "movie", "tv"] as const).map((v) => {
@@ -85,10 +122,10 @@ export default function FavoritesScreen() {
               <Ionicons name="star-outline" size={34} color={theme.gold} />
             </View>
             <Text style={{ color: theme.text, fontWeight: "900", fontSize: 20, textAlign: "center" }}>
-              {t.favoritesEmpty}
+              {section === "favorites" ? t.favoritesEmpty : section === "watchlist" ? t.libraryWatchlistEmpty : t.libraryWatchedEmpty}
             </Text>
             <Text style={{ color: theme.muted, fontSize: 15, textAlign: "center", maxWidth: 260, lineHeight: 22 }}>
-              {t.favoritesEmptyDesc}
+              {section === "favorites" ? t.favoritesEmptyDesc : t.libraryWatchEmptyDesc}
             </Text>
             <Pressable
               onPress={() => router.push("/")}
@@ -138,12 +175,22 @@ export default function FavoritesScreen() {
                   <Text style={{ color: theme.muted }}>
                     ⭐ {(item.vote_average ?? 0).toFixed(1)}
                   </Text>
+                  {section !== "favorites" ? (
+                    <Text style={{ color: section === "watchlist" ? theme.accent2 : "#60A5FA", fontWeight: "900" }}>
+                      {section === "watchlist" ? t.libraryInWatchlist : t.libraryWatched}
+                    </Text>
+                  ) : null}
                 </View>
                 <Pressable
                   onPress={async (e) => {
                     e.stopPropagation();
-                    const next = await toggleFavorite(item);
-                    setItems(next);
+                    if (section === "favorites") {
+                      const next = await toggleFavorite(item);
+                      setItems(next);
+                    } else {
+                      const next = await removeWatchStatus(item.id, item.type);
+                      setWatchItems(next);
+                    }
                   }}
                   style={{
                     width: 38, height: 38, borderRadius: 12, borderWidth: 1,
@@ -151,7 +198,7 @@ export default function FavoritesScreen() {
                     alignItems: "center", justifyContent: "center",
                   }}
                 >
-                  <Ionicons name="star" size={18} color={theme.gold} />
+                  <Ionicons name={section === "favorites" ? "star" : "close"} size={18} color={section === "favorites" ? theme.gold : theme.text} />
                 </Pressable>
               </Pressable>
             </Animated.View>

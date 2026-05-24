@@ -12,6 +12,7 @@ import { getRegion, setRegion } from "../src/storage/settings";
 import { theme } from "../src/ui/theme";
 import { t } from "../src/i18n";
 import { toggleFavorite, getFavorites } from "../src/storage/favorites";
+import { getWatchStatus, removeWatchStatus, setWatchStatus, WatchStatus } from "../src/storage/watchlist";
 
 const cardShadow = {
   shadowColor: "#000",
@@ -139,6 +140,7 @@ export default function DetailScreen() {
   const [providerLink, setProviderLink] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [isFav, setIsFav] = useState(false);
+  const [watchStatus, setWatchStatusState] = useState<WatchStatus | null>(null);
   const [cast, setCast] = useState<CastMember[]>([]);
   const [trailer, setTrailer] = useState<Video | null>(null);
   const [trailerModalVisible, setTrailerModalVisible] = useState(false);
@@ -153,6 +155,7 @@ export default function DetailScreen() {
     getFavorites().then((favs) => {
       setIsFav(favs.some((f) => f.id === Number(id) && f.type === type));
     });
+    getWatchStatus(Number(id), type).then(setWatchStatusState);
   }, [id, type]);
 
   useEffect(() => {
@@ -223,6 +226,25 @@ export default function DetailScreen() {
   const runtimeLabel = item?.runtime ? `${item.runtime} min` : null;
   const seasonLabel = item?.number_of_seasons ? `${item.number_of_seasons} season${item.number_of_seasons === 1 ? "" : "s"}` : null;
   const episodeLabel = item?.number_of_episodes ? `${item.number_of_episodes} episodes` : null;
+
+  async function updateWatchStatus(status: WatchStatus) {
+    if (!item || !type) return;
+    const year = (item.release_date ?? item.first_air_date ?? "").slice(0, 4);
+    if (watchStatus === status) {
+      await removeWatchStatus(item.id, type);
+      setWatchStatusState(null);
+      return;
+    }
+    await setWatchStatus({
+      id: item.id,
+      type,
+      title,
+      poster_path: item.poster_path,
+      vote_average: item.vote_average,
+      year,
+    }, status);
+    setWatchStatusState(status);
+  }
 
   return (
     <>
@@ -380,6 +402,33 @@ export default function DetailScreen() {
                     {isFav ? t.detailFavoriteRemove : t.detailFavorite}
                   </Text>
                 </Pressable>
+
+                <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
+                  <Pressable
+                    onPress={() => updateWatchStatus("watchlist")}
+                    style={{
+                      flex: 1, minHeight: 46, paddingVertical: 11, paddingHorizontal: 10, borderRadius: 16, borderWidth: 1,
+                      borderColor: watchStatus === "watchlist" ? "rgba(34,197,94,0.62)" : theme.border,
+                      backgroundColor: watchStatus === "watchlist" ? "rgba(34,197,94,0.16)" : theme.card,
+                      alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 7,
+                    }}
+                  >
+                    <Ionicons name={watchStatus === "watchlist" ? "bookmark" : "bookmark-outline"} size={17} color={watchStatus === "watchlist" ? theme.accent2 : theme.text} />
+                    <Text style={{ color: theme.text, fontWeight: "900", fontSize: 13 }}>{t.detailWatchlist}</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => updateWatchStatus("watched")}
+                    style={{
+                      flex: 1, minHeight: 46, paddingVertical: 11, paddingHorizontal: 10, borderRadius: 16, borderWidth: 1,
+                      borderColor: watchStatus === "watched" ? "rgba(96,165,250,0.62)" : theme.border,
+                      backgroundColor: watchStatus === "watched" ? "rgba(96,165,250,0.16)" : theme.card,
+                      alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 7,
+                    }}
+                  >
+                    <Ionicons name={watchStatus === "watched" ? "checkmark-circle" : "checkmark-circle-outline"} size={18} color={watchStatus === "watched" ? "#60A5FA" : theme.text} />
+                    <Text style={{ color: theme.text, fontWeight: "900", fontSize: 13 }}>{t.detailWatched}</Text>
+                  </Pressable>
+                </View>
 
                 <Text style={{ marginTop: 14, color: theme.text, fontWeight: "900" }}>
                   {t.detailRegion}
