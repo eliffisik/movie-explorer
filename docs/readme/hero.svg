@@ -1,0 +1,110 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="640" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#080B12"/>
+      <stop offset="0.58" stop-color="#101827"/>
+      <stop offset="1" stop-color="#07140F"/>
+    </linearGradient>
+    <linearGradient id="poster1" x1="0" y1="0" x2="120" y2="174" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#22C55E"/>
+    </linearGradient>
+    <linearGradient id="poster2" x1="0" y1="0" x2="120" y2="174" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FACC15"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="0" y2="470" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#101827"/>
+      <stop offset="1" stop-color="#080B12"/>
+    </linearGradient>
+    <filter id="softShadow" x="-24%" y="-24%" width="148%" height="148%">
+      <feDropShadow dx="0" dy="26" stdDeviation="28" flood-color="#000000" flood-opacity="0.34"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="640" rx="34" fill="url(#bg)"/>
+  <rect x="28" y="28" width="1224" height="584" rx="28" stroke="rgba(255,255,255,0.12)"/>
+
+  <g font-family="Inter, Segoe UI, Arial, sans-serif">
+    <text x="78" y="126" fill="#F4F7FF" font-size="72" font-weight="900">Cinefy</text>
+    <text x="80" y="174" fill="rgba(244,247,255,0.76)" font-size="25" font-weight="500">Find where movies and series are streaming.</text>
+    <text x="80" y="211" fill="rgba(244,247,255,0.56)" font-size="18">Search a title, pick your region, and see subscription, rent, and buy options.</text>
+
+    <g transform="translate(80 260)">
+      <rect width="218" height="52" rx="26" fill="rgba(139,92,246,0.20)" stroke="rgba(139,92,246,0.70)"/>
+      <circle cx="32" cy="26" r="10" fill="#8B5CF6"/>
+      <text x="54" y="33" fill="#F4F7FF" font-size="16" font-weight="850">Where to watch</text>
+    </g>
+    <g transform="translate(316 260)">
+      <rect width="184" height="52" rx="26" fill="rgba(34,197,94,0.16)" stroke="rgba(34,197,94,0.60)"/>
+      <circle cx="32" cy="26" r="10" fill="#22C55E"/>
+      <text x="54" y="33" fill="#F4F7FF" font-size="16" font-weight="850">Region aware</text>
+    </g>
+    <g transform="translate(518 260)">
+      <rect width="174" height="52" rx="26" fill="rgba(250,204,21,0.13)" stroke="rgba(250,204,21,0.56)"/>
+      <circle cx="32" cy="26" r="10" fill="#FACC15"/>
+      <text x="54" y="33" fill="#F4F7FF" font-size="16" font-weight="850">Watchlist</text>
+    </g>
+
+    <g transform="translate(80 366)">
+      <rect width="190" height="96" rx="20" fill="#121A2A" stroke="rgba(255,255,255,0.13)"/>
+      <text x="22" y="38" fill="#F4F7FF" font-size="20" font-weight="900">Search</text>
+      <text x="22" y="67" fill="rgba(244,247,255,0.64)" font-size="15">Movies and series</text>
+    </g>
+    <g transform="translate(292 366)">
+      <rect width="190" height="96" rx="20" fill="#121A2A" stroke="rgba(255,255,255,0.13)"/>
+      <text x="22" y="38" fill="#F4F7FF" font-size="20" font-weight="900">Platforms</text>
+      <text x="22" y="67" fill="rgba(244,247,255,0.64)" font-size="15">Stream, rent, buy</text>
+    </g>
+    <g transform="translate(504 366)">
+      <rect width="190" height="96" rx="20" fill="#121A2A" stroke="rgba(255,255,255,0.13)"/>
+      <text x="22" y="38" fill="#F4F7FF" font-size="20" font-weight="900">Library</text>
+      <text x="22" y="67" fill="rgba(244,247,255,0.64)" font-size="15">Save and track</text>
+    </g>
+  </g>
+
+  <g transform="translate(754 82)" filter="url(#softShadow)">
+    <rect width="292" height="486" rx="36" fill="#05070C" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+    <rect x="16" y="16" width="260" height="454" rx="27" fill="url(#screen)"/>
+
+    <g font-family="Inter, Segoe UI, Arial, sans-serif">
+      <text x="34" y="62" fill="#8B5CF6" font-size="12" font-weight="900">CINEFY</text>
+      <text x="34" y="100" fill="#F4F7FF" font-size="29" font-weight="900">Find Platform</text>
+      <rect x="34" y="124" width="224" height="46" rx="17" fill="#121A2A" stroke="rgba(255,255,255,0.12)"/>
+      <circle cx="58" cy="147" r="9" fill="#8B5CF6"/>
+      <text x="78" y="153" fill="rgba(244,247,255,0.58)" font-size="14">Search movie or series</text>
+
+      <g transform="translate(34 196)">
+        <rect width="74" height="108" rx="13" fill="url(#poster1)"/>
+        <rect x="92" y="8" width="124" height="15" rx="7.5" fill="#F4F7FF" opacity="0.90"/>
+        <rect x="92" y="36" width="72" height="24" rx="12" fill="rgba(250,204,21,0.14)" stroke="rgba(250,204,21,0.34)"/>
+        <text x="110" y="53" fill="#F4F7FF" font-size="11" font-weight="900">8.4</text>
+        <rect x="92" y="76" width="132" height="10" rx="5" fill="rgba(244,247,255,0.32)"/>
+        <rect x="92" y="96" width="96" height="10" rx="5" fill="rgba(244,247,255,0.22)"/>
+      </g>
+
+      <g transform="translate(34 332)">
+        <rect width="224" height="86" rx="20" fill="#121A2A" stroke="rgba(255,255,255,0.12)"/>
+        <text x="18" y="31" fill="#F4F7FF" font-size="15" font-weight="900">Where to watch</text>
+        <g transform="translate(18 48)">
+          <rect width="58" height="24" rx="12" fill="rgba(34,197,94,0.18)" stroke="rgba(34,197,94,0.40)"/>
+          <text x="13" y="17" fill="#F4F7FF" font-size="10" font-weight="900">Stream</text>
+          <rect x="68" width="48" height="24" rx="12" fill="rgba(139,92,246,0.18)" stroke="rgba(139,92,246,0.40)"/>
+          <text x="82" y="17" fill="#F4F7FF" font-size="10" font-weight="900">Rent</text>
+          <rect x="126" width="42" height="24" rx="12" fill="rgba(250,204,21,0.14)" stroke="rgba(250,204,21,0.34)"/>
+          <text x="139" y="17" fill="#F4F7FF" font-size="10" font-weight="900">Buy</text>
+        </g>
+      </g>
+    </g>
+  </g>
+
+  <g transform="translate(1020 168)" filter="url(#softShadow)">
+    <rect width="172" height="292" rx="26" fill="#05070C" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+    <rect x="12" y="12" width="148" height="268" rx="20" fill="#080B12"/>
+    <rect x="28" y="36" width="116" height="168" rx="18" fill="url(#poster2)"/>
+    <circle cx="86" cy="120" r="28" fill="rgba(255,255,255,0.22)"/>
+    <path d="M78 105L102 120L78 135V105Z" fill="#F4F7FF"/>
+    <text x="30" y="236" fill="#F4F7FF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="900">Trailer</text>
+    <text x="30" y="260" fill="rgba(244,247,255,0.58)" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12">Cast and details</text>
+  </g>
+</svg>
