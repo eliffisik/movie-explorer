@@ -1,11 +1,20 @@
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, View, Image, Modal, Platform } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { theme } from "../../src/ui/theme";
 import { posterUrl } from "../../src/utils/image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { t } from "../../src/i18n";
+
+const cardShadow = {
+  shadowColor: "#000",
+  shadowOpacity: 0.2,
+  shadowRadius: 16,
+  shadowOffset: { width: 0, height: 9 },
+  elevation: 4,
+};
 
 const API_BASES = [
   process.env.EXPO_PUBLIC_AI_API_BASE,
@@ -100,28 +109,39 @@ export default function ExploreAI() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 28 }}>
-        <Text style={{ fontSize: 28, fontWeight: "900", color: theme.text }}>{t.exploreTitle}</Text>
-        <Text style={{ color: theme.muted, marginTop: 6 }}>{t.exploreSubtitle}</Text>
+        <View style={{ borderRadius: 24, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.surface, padding: 16, overflow: "hidden", ...cardShadow }}>
+          <View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 5, backgroundColor: theme.accent2 }} />
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: theme.accent2, fontSize: 12, fontWeight: "900", letterSpacing: 0 }}>AI PICKS</Text>
+              <Text style={{ fontSize: 30, fontWeight: "900", color: theme.text, marginTop: 4 }}>{t.exploreTitle}</Text>
+              <Text style={{ color: theme.muted, marginTop: 6, lineHeight: 20 }}>{t.exploreSubtitle}</Text>
+            </View>
+            <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: "rgba(34,197,94,0.14)", borderWidth: 1, borderColor: "rgba(34,197,94,0.35)", alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="sparkles" size={25} color={theme.accent2} />
+            </View>
+          </View>
 
-        {/* Type toggle */}
-        <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}>
-          {(["all", "movie", "tv"] as const).map((tp) => {
-            const active = tp === type;
-            const label = tp === "all" ? "ALL" : tp.toUpperCase();
-            return (
-              <Pressable
-                key={tp}
-                onPress={() => setType(tp)}
-                style={{
-                  paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, borderWidth: 1,
-                  borderColor: active ? "rgba(124,92,252,0.8)" : theme.border,
-                  backgroundColor: active ? "rgba(124,92,252,0.22)" : theme.card,
-                }}
-              >
-                <Text style={{ color: theme.text, fontWeight: "900" }}>{label}</Text>
-              </Pressable>
-            );
-          })}
+          {/* Type toggle */}
+          <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}>
+            {(["all", "movie", "tv"] as const).map((tp) => {
+              const active = tp === type;
+              const label = tp === "all" ? "ALL" : tp.toUpperCase();
+              return (
+                <Pressable
+                  key={tp}
+                  onPress={() => setType(tp)}
+                  style={{
+                    paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, borderWidth: 1,
+                    borderColor: active ? "rgba(34,197,94,0.65)" : theme.border,
+                    backgroundColor: active ? "rgba(34,197,94,0.16)" : theme.card,
+                  }}
+                >
+                  <Text style={{ color: active ? theme.text : theme.muted, fontWeight: "900" }}>{label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
         {/* Genre */}
@@ -130,13 +150,14 @@ export default function ExploreAI() {
           onPress={() => setShowGenres(true)}
           style={{
             marginTop: 8, borderWidth: 1, borderColor: theme.border,
-            backgroundColor: theme.card, borderRadius: 16,
+            backgroundColor: theme.card, borderRadius: 18,
             paddingHorizontal: 14, paddingVertical: 14,
             flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+            ...cardShadow,
           }}
         >
           <Text style={{ color: theme.text, fontWeight: "900", fontSize: 16 }}>{selectedGenreLabel}</Text>
-          <Text style={{ color: theme.muted, fontSize: 16 }}>▾</Text>
+          <Ionicons name="chevron-down" size={18} color={theme.muted} />
         </Pressable>
 
         <Modal visible={showGenres} transparent animationType="fade">
@@ -154,8 +175,8 @@ export default function ExploreAI() {
                     onPress={() => { setGenre(g.value); setShowGenres(false); }}
                     style={{
                       paddingVertical: 12, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1,
-                      borderColor: active ? "rgba(124,92,252,0.8)" : "transparent",
-                      backgroundColor: active ? "rgba(124,92,252,0.18)" : "rgba(255,255,255,0.04)",
+                      borderColor: active ? "rgba(34,197,94,0.65)" : "transparent",
+                      backgroundColor: active ? "rgba(34,197,94,0.16)" : "rgba(255,255,255,0.04)",
                     }}
                   >
                     <Text style={{ color: theme.text, fontWeight: "800", fontSize: 15 }}>{g.label}</Text>
@@ -179,11 +200,11 @@ export default function ExploreAI() {
                 onPress={() => toggleMood(m.value)}
                 style={{
                   paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, borderWidth: 1,
-                  borderColor: active ? "rgba(124,92,252,0.8)" : theme.border,
-                  backgroundColor: active ? "rgba(124,92,252,0.22)" : theme.card,
+                  borderColor: active ? "rgba(34,197,94,0.65)" : theme.border,
+                  backgroundColor: active ? "rgba(34,197,94,0.16)" : theme.card,
                 }}
               >
-                <Text style={{ color: active ? "#fff" : theme.muted, fontWeight: "700", fontSize: 14 }}>
+                <Text style={{ color: active ? theme.text : theme.muted, fontWeight: "700", fontSize: 14 }}>
                   {m.label}
                 </Text>
               </Pressable>
@@ -195,10 +216,13 @@ export default function ExploreAI() {
         <Pressable
           onPress={recommend}
           style={{
-            marginTop: 16, paddingVertical: 12, borderRadius: 16, borderWidth: 1,
-            borderColor: "rgba(124,92,252,0.7)", backgroundColor: "rgba(124,92,252,0.22)", alignItems: "center",
+            marginTop: 16, paddingVertical: 14, borderRadius: 18, borderWidth: 1,
+            borderColor: "rgba(34,197,94,0.55)", backgroundColor: "rgba(34,197,94,0.18)",
+            alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8,
+            ...cardShadow,
           }}
         >
+          <Ionicons name="sparkles" size={18} color={theme.text} />
           <Text style={{ color: theme.text, fontWeight: "900" }}>{t.exploreButton}</Text>
         </Pressable>
 
@@ -206,7 +230,7 @@ export default function ExploreAI() {
         {loading ? (
           <View style={{ marginTop: 14, gap: 10 }}>
             {[...Array(5)].map((_, i) => (
-              <View key={i} style={{ padding: 12, borderRadius: 18, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card, flexDirection: "row", gap: 12, alignItems: "center", opacity: 1 - i * 0.15 }}>
+              <View key={i} style={{ padding: 12, borderRadius: 20, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card, flexDirection: "row", gap: 12, alignItems: "center", opacity: 1 - i * 0.15 }}>
                 <View style={{ width: 62, height: 92, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.06)" }} />
                 <View style={{ flex: 1, gap: 8 }}>
                   <View style={{ height: 16, borderRadius: 8, backgroundColor: "rgba(255,255,255,0.06)", width: "70%" }} />
@@ -237,7 +261,7 @@ export default function ExploreAI() {
               <Animated.View key={x.id} entering={FadeInDown.delay(index * 80).duration(400).springify()}>
                 <Pressable
                   onPress={() => { if (!x.type) return; router.push({ pathname: "/detail", params: { id: String(x.id), type: x.type } }); }}
-                  style={{ padding: 12, borderRadius: 18, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card, flexDirection: "row", gap: 12, alignItems: "center" }}
+                  style={{ padding: 12, borderRadius: 20, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card, flexDirection: "row", gap: 12, alignItems: "center", ...cardShadow }}
                 >
                   <View style={{ width: 62, height: 92, borderRadius: 12, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)" }}>
                     {img ? <Image source={{ uri: img }} style={{ width: "100%", height: "100%" }} /> : null}

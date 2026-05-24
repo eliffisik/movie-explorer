@@ -4,12 +4,21 @@ import {
   View, ActivityIndicator, Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { tmdbGet } from "../src/api/tmdbClient";
 import { posterUrl } from "../src/utils/image";
 import { theme } from "../src/ui/theme";
 import { toggleFavorite, getFavorites } from "../src/storage/favorites";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { t } from "../src/i18n";
+
+const cardShadow = {
+  shadowColor: "#000",
+  shadowOpacity: 0.22,
+  shadowRadius: 18,
+  shadowOffset: { width: 0, height: 10 },
+  elevation: 5,
+};
 
 type MediaType = "movie" | "tv" | "person";
 
@@ -112,62 +121,70 @@ export default function SearchScreen() {
   }, [debounced, canSearch]);
 
   const header = useMemo(() => (
-    <SafeAreaView style={{ padding: 16, paddingBottom: 10, backgroundColor: theme.bg }}>
-      <Text style={{ fontSize: 28, fontWeight: "900", color: theme.text }}>
-        {t.search}
-      </Text>
-      <Text style={{ marginTop: 6, color: theme.muted }}>
-        {t.searchPlaceholder2}
-      </Text>
+    <SafeAreaView style={{ padding: 16, paddingBottom: 12, backgroundColor: theme.bg }}>
+      <View style={{ borderRadius: 24, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.surface, padding: 16, overflow: "hidden", ...cardShadow }}>
+        <View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 5, backgroundColor: theme.accent }} />
+        <Text style={{ color: theme.accent, fontSize: 12, fontWeight: "900", letterSpacing: 0 }}>
+          MOVIE EXPLORER
+        </Text>
+        <Text style={{ fontSize: 32, fontWeight: "900", color: theme.text, marginTop: 4 }}>
+          {t.search}
+        </Text>
+        <Text style={{ marginTop: 6, color: theme.muted, lineHeight: 20 }}>
+          {t.searchPlaceholder2.trim()}
+        </Text>
 
-      <View style={{ marginTop: 14, flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <View style={{
-          flex: 1, borderWidth: 1, borderColor: theme.border,
-          backgroundColor: theme.card, borderRadius: 16,
-          paddingHorizontal: 12, paddingVertical: Platform.OS === "web" ? 10 : 12,
-        }}>
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder={t.searchPlaceholder}
-            placeholderTextColor={theme.muted}
-            autoCorrect={false}
-            autoCapitalize="none"
-            style={{ color: theme.text, fontSize: 16 }}
-          />
-        </View>
-        {query.length > 0 ? (
-          <Pressable
-            onPress={() => setQuery("")}
-            style={{ paddingHorizontal: 12, paddingVertical: 12, borderRadius: 14, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card }}
-          >
-            <Text style={{ color: theme.text, fontWeight: "800" }}>Clear</Text>
-          </Pressable>
-        ) : null}
-      </View>
-
-      <View style={{ flexDirection: "row", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-        {(["all", "movie", "tv"] as const).map((v) => {
-          const active = filter === v;
-          const label = v === "all" ? "All" : v === "movie" ? "Movies" : "TV";
-          return (
+        <View style={{ marginTop: 16, flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <View style={{
+            flex: 1, borderWidth: 1, borderColor: theme.borderStrong,
+            backgroundColor: theme.card, borderRadius: 18,
+            paddingHorizontal: 12, paddingVertical: Platform.OS === "web" ? 10 : 12,
+            flexDirection: "row", alignItems: "center", gap: 10,
+          }}>
+            <Ionicons name="search" size={20} color={theme.faint} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder={t.searchPlaceholder}
+              placeholderTextColor={theme.faint}
+              autoCorrect={false}
+              autoCapitalize="none"
+              style={{ color: theme.text, fontSize: 16, flex: 1 }}
+            />
+          </View>
+          {query.length > 0 ? (
             <Pressable
-              key={v}
-              onPress={() => setFilter(v)}
-              style={{
-                paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1,
-                borderColor: active ? "rgba(124,92,252,0.7)" : theme.border,
-                backgroundColor: active ? "rgba(124,92,252,0.22)" : theme.card,
-              }}
+              onPress={() => setQuery("")}
+              style={{ width: 46, height: 46, borderRadius: 16, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.cardSoft, alignItems: "center", justifyContent: "center" }}
             >
-              <Text style={{ color: theme.text, fontWeight: "900" }}>{label}</Text>
+              <Ionicons name="close" size={20} color={theme.text} />
             </Pressable>
-          );
-        })}
+          ) : null}
+        </View>
+
+        <View style={{ flexDirection: "row", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+          {(["all", "movie", "tv"] as const).map((v) => {
+            const active = filter === v;
+            const label = v === "all" ? "All" : v === "movie" ? "Movies" : "TV";
+            return (
+              <Pressable
+                key={v}
+                onPress={() => setFilter(v)}
+                style={{
+                  paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, borderWidth: 1,
+                  borderColor: active ? "rgba(139,92,246,0.85)" : theme.border,
+                  backgroundColor: active ? "rgba(139,92,246,0.24)" : theme.card,
+                }}
+              >
+                <Text style={{ color: active ? theme.text : theme.muted, fontWeight: "900" }}>{label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
 
       {query.trim().length === 0 ? (
-        <Text style={{ color: theme.muted, marginTop: 10 }}>Trending today</Text>
+        <Text style={{ color: theme.muted, marginTop: 16, fontWeight: "800" }}>Trending today</Text>
       ) : null}
 
       {loading ? (
@@ -211,8 +228,8 @@ export default function SearchScreen() {
         ListEmptyComponent={
           !loading ? (
             <View style={{ padding: 24, alignItems: "center" }}>
-              <View style={{ width: 58, height: 58, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(124,92,252,0.16)", borderWidth: 1, borderColor: "rgba(124,92,252,0.28)" }}>
-                <Text style={{ fontSize: 24 }}>⌕</Text>
+              <View style={{ width: 58, height: 58, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(139,92,246,0.16)", borderWidth: 1, borderColor: "rgba(139,92,246,0.28)" }}>
+                <Ionicons name="film-outline" size={26} color={theme.accent} />
               </View>
               <Text style={{ color: theme.text, fontWeight: "900", fontSize: 18, marginTop: 14, textAlign: "center" }}>{emptyTitle}</Text>
               <Text style={{ color: theme.muted, marginTop: 6, textAlign: "center", lineHeight: 20 }}>{emptySubtitle}</Text>
@@ -232,8 +249,9 @@ export default function SearchScreen() {
               onPress={() => router.push({ pathname: "/detail", params: { id: String(item.id), type } })}
               style={{
                 position: "relative", marginHorizontal: 16, padding: 12,
-                borderRadius: 16, borderWidth: 1, borderColor: theme.border,
+                borderRadius: 20, borderWidth: 1, borderColor: theme.border,
                 backgroundColor: theme.card, flexDirection: "row", gap: 14, alignItems: "center",
+                ...cardShadow,
               }}
             >
               <Pressable
@@ -245,12 +263,10 @@ export default function SearchScreen() {
                 style={{
                   position: "absolute", top: 12, right: 12, width: 38, height: 38,
                   borderRadius: 12, borderWidth: 1, borderColor: theme.border,
-                  backgroundColor: "rgba(0,0,0,0.35)", alignItems: "center", justifyContent: "center", zIndex: 10,
+                  backgroundColor: "rgba(8,11,18,0.78)", alignItems: "center", justifyContent: "center", zIndex: 10,
                 }}
               >
-                <Text style={{ fontSize: 18, color: isFav ? theme.accent : theme.text }}>
-                  {isFav ? "★" : "☆"}
-                </Text>
+                <Ionicons name={isFav ? "star" : "star-outline"} size={19} color={isFav ? theme.gold : theme.text} />
               </Pressable>
 
               <View style={{ width: 72, height: 108, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)", alignItems: "center", justifyContent: "center" }}>

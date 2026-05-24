@@ -4,12 +4,21 @@ import {
   ScrollView, Text, View, Linking,
 } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { tmdbGet } from "../src/api/tmdbClient";
 import { posterUrl } from "../src/utils/image";
 import { getRegion, setRegion } from "../src/storage/settings";
 import { theme } from "../src/ui/theme";
 import { t } from "../src/i18n";
 import { toggleFavorite, getFavorites } from "../src/storage/favorites";
+
+const cardShadow = {
+  shadowColor: "#000",
+  shadowOpacity: 0.24,
+  shadowRadius: 18,
+  shadowOffset: { width: 0, height: 10 },
+  elevation: 5,
+};
 
 type Params = { id?: string; type?: "movie" | "tv" };
 
@@ -218,9 +227,7 @@ export default function DetailScreen() {
             }}
             style={{ marginRight: 8, padding: 6 }}
           >
-            <Text style={{ fontSize: 24, color: isFav ? theme.accent : theme.text }}>
-              {isFav ? "★" : "☆"}
-            </Text>
+            <Ionicons name={isFav ? "star" : "star-outline"} size={24} color={isFav ? theme.gold : theme.text} />
           </Pressable>
         ) : null,
       }} />
@@ -242,21 +249,22 @@ export default function DetailScreen() {
         ) : (
           <ScrollView contentContainerStyle={{ paddingBottom: 28 }}>
             {/* Hero */}
-            <View style={{ height: 280, backgroundColor: theme.card }}>
+            <View style={{ height: 300, backgroundColor: theme.card }}>
               {hero ? (
                 <Image source={{ uri: hero }} style={{ width: "100%", height: "100%", opacity: 0.85 }} />
               ) : null}
-              <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 140, backgroundColor: "rgba(11,15,25,0.85)" }} />
+              <View style={{ position: "absolute", left: 0, right: 0, top: 0, height: 120, backgroundColor: "rgba(8,11,18,0.35)" }} />
+              <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 170, backgroundColor: "rgba(8,11,18,0.88)" }} />
             </View>
 
             {/* Body */}
             <View style={{ padding: 16, marginTop: -40 }}>
-              <View style={{ borderRadius: 18, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card, padding: 14 }}>
-                <Text style={{ fontSize: 22, fontWeight: "900", color: theme.text }}>{title}</Text>
+              <View style={{ borderRadius: 24, borderWidth: 1, borderColor: theme.borderStrong, backgroundColor: theme.surface, padding: 16, ...cardShadow }}>
+                <Text style={{ fontSize: 24, fontWeight: "900", color: theme.text, lineHeight: 30 }}>{title}</Text>
 
                 <View style={{ flexDirection: "row", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
                   <View style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: "rgba(124,92,252,0.18)", borderWidth: 1, borderColor: "rgba(124,92,252,0.35)" }}>
-                    <Text style={{ color: theme.text, fontWeight: "900" }}>⭐ {item.vote_average?.toFixed(1)}</Text>
+                    <Text style={{ color: theme.text, fontWeight: "900" }}>Rating {item.vote_average?.toFixed(1)}</Text>
                   </View>
                   <View style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: theme.border }}>
                     <Text style={{ color: theme.text, fontWeight: "800" }}>
@@ -304,11 +312,12 @@ export default function DetailScreen() {
                       if (can) await Linking.openURL(trailerLink);
                     }}
                     style={{
-                      marginTop: 14, paddingVertical: 12, borderRadius: 16, borderWidth: 1,
-                      borderColor: "rgba(124,92,252,0.7)", backgroundColor: "rgba(124,92,252,0.22)",
-                      alignItems: "center",
+                      marginTop: 14, paddingVertical: 12, borderRadius: 18, borderWidth: 1,
+                      borderColor: "rgba(139,92,246,0.7)", backgroundColor: "rgba(139,92,246,0.22)",
+                      alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8,
                     }}
                   >
+                    <Ionicons name="play-circle" size={19} color={theme.text} />
                     <Text style={{ color: theme.text, fontWeight: "900" }}>Watch Trailer</Text>
                   </Pressable>
                 ) : null}
@@ -328,15 +337,13 @@ export default function DetailScreen() {
                     setIsFav(next.some((f) => f.id === item.id && f.type === type));
                   }}
                   style={{
-                    marginTop: 14, paddingVertical: 12, borderRadius: 16, borderWidth: 1,
+                    marginTop: 14, paddingVertical: 12, borderRadius: 18, borderWidth: 1,
                     borderColor: isFav ? "rgba(252,92,124,0.6)" : "rgba(124,92,252,0.7)",
                     backgroundColor: isFav ? "rgba(252,92,124,0.15)" : "rgba(124,92,252,0.22)",
                     alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8,
                   }}
                 >
-                  <Text style={{ fontSize: 18, color: isFav ? "#fc5c7c" : theme.text }}>
-                    {isFav ? "★" : "☆"}
-                  </Text>
+                  <Ionicons name={isFav ? "star" : "star-outline"} size={18} color={isFav ? "#fc5c7c" : theme.text} />
                   <Text style={{ color: isFav ? "#fc5c7c" : theme.text, fontWeight: "900" }}>
                     {isFav ? t.detailFavoriteRemove : t.detailFavorite}
                   </Text>
