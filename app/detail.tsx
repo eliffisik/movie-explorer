@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { WebView } from "react-native-webview";
 import { tmdbGet } from "../src/api/tmdbClient";
 import { posterUrl } from "../src/utils/image";
 import { getRegion, setRegion } from "../src/storage/settings";
@@ -93,8 +94,12 @@ function youtubeUrl(video: Video | null) {
   return video ? `https://www.youtube.com/watch?v=${video.key}` : null;
 }
 
+function youtubeMobileUrl(video: Video | null) {
+  return video ? `https://m.youtube.com/watch?v=${video.key}&autoplay=1&playsinline=1` : null;
+}
+
 function youtubeEmbedUrl(video: Video | null) {
-  return video ? `https://www.youtube.com/embed/${video.key}?autoplay=1&rel=0&modestbranding=1` : null;
+  return video ? `https://www.youtube.com/embed/${video.key}?autoplay=1&playsinline=1&rel=0&modestbranding=1&origin=https%3A%2F%2Fcinefy.app` : null;
 }
 
 function youtubeThumbnail(video: Video | null) {
@@ -212,6 +217,7 @@ export default function DetailScreen() {
   const noProviders = flatrateProviders.length === 0 && rentProviders.length === 0 && buyProviders.length === 0;
   const hero = backdropUrl(item?.backdrop_path) || posterUrl(item?.poster_path ?? null, "w500");
   const trailerLink = youtubeUrl(trailer);
+  const trailerMobileLink = youtubeMobileUrl(trailer);
   const trailerEmbedLink = youtubeEmbedUrl(trailer);
   const trailerThumb = youtubeThumbnail(trailer);
   const runtimeLabel = item?.runtime ? `${item.runtime} min` : null;
@@ -481,6 +487,28 @@ export default function DetailScreen() {
                   allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
                   allowFullScreen: true,
                 })
+              ) : trailerMobileLink ? (
+                <WebView
+                  source={{ uri: trailerMobileLink }}
+                  style={{ flex: 1, backgroundColor: "#000" }}
+                  originWhitelist={["https://*", "http://*"]}
+                  allowsFullscreenVideo
+                  allowsInlineMediaPlayback
+                  mediaPlaybackRequiresUserAction={false}
+                  thirdPartyCookiesEnabled
+                  sharedCookiesEnabled
+                  mixedContentMode="always"
+                  javaScriptEnabled
+                  domStorageEnabled
+                  setSupportMultipleWindows={false}
+                  userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+                  startInLoadingState
+                  renderLoading={() => (
+                    <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, alignItems: "center", justifyContent: "center", backgroundColor: "#000" }}>
+                      <ActivityIndicator />
+                    </View>
+                  )}
+                />
               ) : (
                 <Pressable
                   onPress={async () => {
